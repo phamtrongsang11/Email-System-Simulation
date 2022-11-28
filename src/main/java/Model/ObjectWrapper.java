@@ -48,7 +48,9 @@ public class ObjectWrapper implements Serializable {
     public static final int FILE_NAME = 34;
     public static final int INIT_RECEIVED_FILE = 35;
     public static final int SCHEDULE_COMPLETE = 36;
-        
+    public static final int CHECK_STORAGE = 37;
+    public static final int IS_FULL= 38;
+    
     private int performative;
     private Object data;
 

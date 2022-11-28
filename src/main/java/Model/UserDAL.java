@@ -61,7 +61,7 @@ public class UserDAL extends MyDatabaseManager {
         }
         return result;
     }
-    
+
     public boolean updateDomain(String email, int id) {
         boolean result = false;
         String query = "UPDATE user SET  email = ? WHERE UserID = ?";
@@ -105,8 +105,6 @@ public class UserDAL extends MyDatabaseManager {
         return false;
     }
 
-    
-    
     public ArrayList<User> getAllUser() {
         ArrayList<User> uList = new ArrayList<>();
         try {
@@ -115,6 +113,7 @@ public class UserDAL extends MyDatabaseManager {
             if (rs != null) {
                 while (rs.next()) {
                     User u = new User(rs.getInt("UserID"), rs.getString("FirstName"), rs.getString("LastName"), rs.getString("Email"));
+                    u.setIsAdmin(rs.getBoolean("IsAdmin"));
                     uList.add(u);
                 }
             }
@@ -139,6 +138,96 @@ public class UserDAL extends MyDatabaseManager {
             System.out.println(ex.getMessage());
         }
         return uList;
+    }
+
+    public boolean checkStorage(User user) {
+        try {
+            String query = "SELECT * FROM user WHERE HadUsed >= Storage AND UserID = " + user.getId();
+            ResultSet rs = this.doReadQuery(query);
+            if (rs != null && rs.next()) {
+                return true;
+            }
+
+        } catch (Exception ex) {
+            System.err.println(ex.getMessage());
+        }
+        return false;
+    }
+
+    public boolean updateHadUsed(User user, Double newUsed) {
+        try {
+            String query = "SELECT HadUsed FROM user WHERE UserID = " + user.getId();
+
+            ResultSet rs = this.doReadQuery(query);
+            if (rs != null && rs.next()) {
+                Double hadUsed = rs.getDouble("HadUsed") + newUsed;
+                String queryUpdate = "UPDATE user SET HadUsed = " + hadUsed + " WHERE UserID = " + user.getId();
+                PreparedStatement p = this.getConnection().prepareStatement(queryUpdate);
+                if (p.executeUpdate() != 0) {
+                    return true;
+                }
+            }
+
+        } catch (Exception ex) {
+            System.err.println(ex.getMessage());
+        }
+        return false;
+    }
+
+    public Double getSizeQueryDb(User user) {
+        try {
+            String query = "SELECT *, user.UserID, user.FirstName, user.LastName, user.Email, mail_status.Name"
+                    + " FROM mail"
+                    + " INNER JOIN mail_received"
+                    + " ON mail.MailID = mail_received.MailID"
+                    + " INNER JOIN user"
+                    + " ON mail.FromID = user.UserID"
+                    //                    + " INNER JOIN mail_status"
+                    //                    + " ON mail_received.StatusID = mail_status.StatusID"
+                    + " WHERE mail_received.ReceiverID = " + user.getId()
+                    //                    + " AND mail.StatusID = " + ObjectWrapper.INBOX_LIST
+                    + " ORDER BY mail.Time DESC";
+
+            String createTempTable = "CREATE TABLE email_system.inbox " + query;
+
+            String getSize = "SELECT round((data_length / 1024 / 1024), 2) AS Size FROM information_schema.TABLES WHERE table_schema = 'email_system' AND table_name = 'inbox'";
+
+            String dropTempTable = "DROP table email_system.inbox";
+
+            PreparedStatement pCreate = this.getConnection().prepareStatement(createTempTable);
+
+            if (pCreate.executeUpdate() != 0) {
+                ResultSet rsSize = this.doReadQuery(getSize);
+
+                if (rsSize != null && rsSize.next()) {
+                    Double value = rsSize.getDouble("Size");
+                    PreparedStatement pDelete = this.getConnection().prepareStatement(dropTempTable);
+
+                    if (pDelete.executeUpdate() == 0) {
+                        return value;
+                    }
+                }
+            }
+
+        } catch (Exception ex) {
+            System.err.println(ex.getMessage());
+        }
+        return null;
+    }
+
+    public boolean updateStorage(String email, Double value) {
+        try {
+            String queryUpdate = "UPDATE user SET Storage = " + value + " WHERE Email = '" + email + "'";
+            PreparedStatement p = this.getConnection().prepareStatement(queryUpdate);
+            if (p.executeUpdate() != 0) {
+                return true;
+            }
+
+        } catch (Exception ex) {
+            System.err.println(ex.getMessage());
+        }
+
+        return false;
     }
 
     public int getId(String email) {

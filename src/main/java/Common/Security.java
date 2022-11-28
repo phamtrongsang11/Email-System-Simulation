@@ -138,19 +138,19 @@ public class Security {
         return strDecrypt;
     }
 
-    public byte[] createKeyAES(String myKey) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    public SecretKeySpec createKeyAES(String myKey) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         MessageDigest sha = MessageDigest.getInstance("SHA-1");
         byte[] key = myKey.getBytes("UTF-8");
         key = sha.digest(key);
         key = Arrays.copyOf(key, 16);
-        return key;
+        SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
+        return secretKey;
     }
 
     public byte[] encryptAES(byte[] plainText, String myKey) {
         try {
-            SecretKeySpec secretKey = new SecretKeySpec(createKeyAES(myKey), "AES");
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            cipher.init(Cipher.ENCRYPT_MODE, createKeyAES(myKey));
             return Base64.getEncoder().encode(cipher.doFinal(plainText));
         } catch (Exception e) {
             System.out.println(e.toString());
@@ -160,9 +160,8 @@ public class Security {
 
     public byte[] decryptAES(byte[] cipherText, String myKey) {
         try {
-            SecretKeySpec secretKey = new SecretKeySpec(createKeyAES(myKey), "AES");
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
-            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+            cipher.init(Cipher.DECRYPT_MODE, createKeyAES(myKey));
             return cipher.doFinal(Base64.getDecoder().decode(cipherText));
         } catch (Exception e) {
             System.out.println(e.toString());
@@ -206,8 +205,8 @@ public class Security {
         }
         return r.toString();
     }
-    
+
     public String hashMD5(String input) {
-            return DigestUtils.md5Hex(input);
-        }
+        return DigestUtils.md5Hex(input);
+    }
 }

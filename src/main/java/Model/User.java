@@ -19,7 +19,8 @@ public class User implements Serializable {
     private String lastName;
     private String email;
     private String password;
-    private boolean isLocked;
+    private boolean isLocked = false;
+    private boolean isAdmin = false;
     
     public User() {
 
@@ -90,6 +91,14 @@ public class User implements Serializable {
 
     public void setIsLocked(boolean isLocked) {
         this.isLocked = isLocked;
+    }
+
+    public boolean isIsAdmin() {
+        return isAdmin;
+    }
+
+    public void setIsAdmin(boolean isAdmin) {
+        this.isAdmin = isAdmin;
     }
     
     @Override

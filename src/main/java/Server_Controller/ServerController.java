@@ -17,6 +17,7 @@ import java.util.concurrent.Executors;
 import Model.ObjectWrapper;
 import Common.Security;
 import Common.Validation;
+import Model.MailReceived;
 import Model.Status;
 import Model.User;
 import Model.UserDAL;
@@ -58,7 +59,7 @@ public class ServerController {
     private ServerListening myListening;
     private Scanner stdIn;
     private String host = "localhost";
-    private String domainName = "";
+    private String domainName = "smail.com";
     private int port = 1234;
     private int numThread = 5;
     public ArrayList<ClientHandler> clientList;
@@ -170,6 +171,7 @@ public class ServerController {
             if ((data = br.readLine()) != null) {
                 domainName = data;
             }
+            this.updateDomainName(domainName);
         } catch (IOException ex) {
             System.err.println(ex.getMessage());
         }
@@ -235,13 +237,14 @@ public class ServerController {
 
     public void SendMessageToAllUser(Mail mail) {
         ArrayList<User> uList = uDAL.getAllUser();
+        ArrayList<MailReceived> recList = new ArrayList<>();
+
         for (User u : uList) {
-            if (u.getId() == 1) {
-                uList.remove(u);
-                break;
+            if (!u.isIsAdmin()) {
+                recList.add(new MailReceived(u));
             }
         }
-        mail.setToUser(uList);
+        mail.setToUser(recList);
 
         if (mDAL.sendMail(mail)) {
 //            ArrayList< ClientHandler> clientReceived = new ArrayList<>();
@@ -298,6 +301,14 @@ public class ServerController {
         }
     }
 
+    public void updateStorage(String email, Double value) {
+        if (uDAL.updateStorage(email, value)) {
+            System.out.println("Set storage success");
+        } else {
+            System.out.println("Set storage fail");
+        }
+    }
+
     public void createKeyFile() {
         sec.createKeyRSA();
     }
@@ -312,12 +323,15 @@ public class ServerController {
         System.out.println("\t5.Locked special user: lock <Email>\n");
         System.out.println("\t6.Get list of user had locked: listlocked\n");
         System.out.println("\t7.Unlocked special user: unlock <Email>\n");
-        System.out.println("\t8.Logout Admin: logout\n");
-        System.out.println("\t9.Exit system: exit\n");
+        System.out.println("\t8.Set storage inbox user: storage <Email>\n");
+        System.out.println("\t9.Logout Admin: logout\n");
+        System.out.println("\t10.Exit system: exit\n");
 
     }
 
     public void action() {
+        ArrayList<User> userList = new ArrayList();
+
         try {
             System.out.println("Hi! You need to login to perform another action!!!");
             do {
@@ -371,7 +385,9 @@ public class ServerController {
                             System.out.println("Please enter content you want to send: ");
                             String content = stdIn.nextLine();
 
-                            Mail mail = new Mail(title, content, this.u, new Status(ObjectWrapper.INBOX_LIST));
+//                            Mail mail = new Mail(title, content, this.u, new Status(ObjectWrapper.INBOX_LIST));
+                            Mail mail = new Mail(title, content, this.u);
+
                             SendMessageToAllUser(mail);
                         }
                         case "list" -> {
@@ -473,6 +489,30 @@ public class ServerController {
                                 }
                             }
 
+                        }
+
+                        case "storage" -> {
+                            if (st.hasMoreTokens()) {
+                                String email = st.nextToken();
+                                if (Validation.validationMail(email)) {
+                                    int uId = uDAL.getId(email);
+                                    if (uId != 0) {
+                                        System.out.println("Please enter storage you want to set: ");
+                                        String in = stdIn.nextLine();
+                                        try {
+                                            Double value = Double.valueOf(in);
+                                            updateStorage(email, value);
+                                        } catch (NumberFormatException ex) {
+                                            System.out.println("Value is not correct format");
+                                        }
+                                    } else {
+                                        System.out.println("This email is not exist");
+                                    }
+                                } else {
+                                    System.out.println("This email is invalid");
+                                }
+
+                            }
                         }
 
                         default ->
@@ -621,7 +661,10 @@ public class ServerController {
             User user = (User) data;
             user.setPassword(sec.hashMD5(user.getPassword()));
             if (uDAL.register(user)) {
-                new File("users" + "/" + user.getEmail()).mkdirs();
+                StringTokenizer st = new StringTokenizer(user.getEmail(), "@");
+                String name = st.nextToken();
+//                new File("users" + "/" + user.getEmail()).mkdirs();
+                new File("users" + "/" + name).mkdirs();
 
                 sendData(new ObjectWrapper(ObjectWrapper.REPLY_SIGNUP_USER, "success"));
             } else {
@@ -650,11 +693,8 @@ public class ServerController {
         }
 
         public void checkRecipients(Object data) throws IOException {
-
             ArrayList<String> mailToList = (ArrayList<String>) data;
-
             ArrayList<Integer> idList = new ArrayList<>();
-
             for (String mail : mailToList) {
 
                 int uId = uDAL.getId(mail);
@@ -665,27 +705,48 @@ public class ServerController {
                 idList.add(uId);
             }
             sendData(new ObjectWrapper(ObjectWrapper.REPLY_SEND_MAIL, idList));
-
         }
 
         public void sendMail(Object data, ObjectOutputStream oos) throws IOException {
             Mail mail = (Mail) data;
-            for (User user : mail.getToUser()) {
-                ArrayList<User> userSpamList = mDAL.getUserSpamMailList(user);
+            for (int i = 0; i < mail.getToUser().size(); i++) {
+                ArrayList<User> userSpamList = mDAL.getUserSpamMailList(mail.getToUser().get(i).getReceiver());
                 for (User u : userSpamList) {
 //                    System.out.println(u.getId() + "&" + mail.getFormUser().getId());
                     if (u.getId() == mail.getFormUser().getId()) {
-                        mail.getStatus().setId(ObjectWrapper.SPAM_LIST);
+                        mail.getToUser().get(i).getStatus().setId(ObjectWrapper.SPAM_LIST);
                     }
                 }
             }
 
-            if (mDAL.sendMail(mail)) {
+            for (int i = 0; i < mail.getToUser().size(); i++) {
+                if (uDAL.checkStorage(mail.getToUser().get(i).getReceiver())) {
+                    sendData(new ObjectWrapper(ObjectWrapper.IS_FULL, mail.getToUser().get(i).getReceiver()));
+                    mail.getToUser().remove(i);
+                }
+            }
+
+            if (!mail.getToUser().isEmpty() && mDAL.sendMail(mail)) {
+//                String folder = "users/" + this.user.getEmail();
+//                File file = new File(folder);
+//                long size = file.length() / (1024 * 1024);\
+
+                if (mail.getFile() != null) {
+                    for (MailReceived rec : mail.getToUser()) {
+                        Double sizeInDb = uDAL.getSizeQueryDb(rec.getReceiver());
+                        if (sizeInDb == null) {
+                            sizeInDb = 0.0;
+                        }
+                        System.out.println(sizeInDb + mail.getSize());
+                        uDAL.updateHadUsed(u, sizeInDb + mail.getSize());
+                    }
+                }
+
                 ArrayList< ClientHandler> clientReceived = new ArrayList<>();
-                for (User u : mail.getToUser()) {
+                for (MailReceived rec : mail.getToUser()) {
                     for (ClientHandler client : clientList) {
 //                          System.out.println(client.getUser().getEmail() + "&" + u.getEmail());
-                        if (client.getUser().getEmail().equals(u.getEmail())) {
+                        if (client.getUser().getEmail().equals(rec.getReceiver().getEmail())) {
                             clientReceived.add(client);
 
                         }
@@ -693,30 +754,33 @@ public class ServerController {
                 }
 //                System.out.println("received: " + clientReceived);
 
-                switch (mail.getStatus().getId()) {
-                    case ObjectWrapper.INBOX_LIST -> {
-                        if (!clientReceived.isEmpty()) {
-                            serverCtr.broardCastInbox(clientReceived);
+                for (int i = 0; i < mail.getToUser().size(); i++) {
+                    int statusId = mail.getToUser().get(i).getStatus().getId();
+                    switch (statusId) {
+                        case ObjectWrapper.INBOX_LIST -> {
+                            if (!clientReceived.isEmpty()) {
+                                serverCtr.broardCastInbox(clientReceived);
+                            }
+                            sendData(new ObjectWrapper(ObjectWrapper.REPLY_SEND_MAIL, "success"));
                         }
-                        sendData(new ObjectWrapper(ObjectWrapper.REPLY_SEND_MAIL, "success"));
-                    }
-                    case ObjectWrapper.SPAM_LIST -> {
-                        if (!clientReceived.isEmpty()) {
-                            serverCtr.broardCastSpam(clientReceived);
+                        case ObjectWrapper.SPAM_LIST -> {
+                            if (!clientReceived.isEmpty()) {
+                                serverCtr.broardCastSpam(clientReceived);
+                            }
+                            sendData(new ObjectWrapper(ObjectWrapper.REPLY_SEND_MAIL, "success"));
                         }
-                        sendData(new ObjectWrapper(ObjectWrapper.REPLY_SEND_MAIL, "success"));
-                    }
-                    case ObjectWrapper.SCHEDULE_LIST -> {
-                        System.out.println(mail.getFormUser());
+                        case ObjectWrapper.SCHEDULE_LIST -> {
+                            System.out.println(mail.getFormUser());
 
 //                        getTotalMailList(mail.getFormUser());
 //                        getScheduleList(mail.getFormUser(), ObjectWrapper.SCHEDULE_LIST);
 //                        oos.writeObject(new ObjectWrapper(ObjectWrapper.UNICAST_SCHEDULE, mail.getFormUser()));
 //                        this.getScheduleList(mail.getFormUser(), ObjectWrapper.SCHEDULE_LIST);
-                        sendData(new ObjectWrapper(ObjectWrapper.REPLY_SEND_MAIL, mail.getFormUser()));
-                        scheduleSendMail(mail);
-                    }
+                            sendData(new ObjectWrapper(ObjectWrapper.REPLY_SEND_MAIL, mail.getFormUser()));
+                            scheduleSendMail(mail);
+                        }
 
+                    }
                 }
 
             } else {
@@ -862,27 +926,27 @@ public class ServerController {
             } else {
                 sendData(new ObjectWrapper(ObjectWrapper.GET_TO_USER, "empty"));
             }
-
         }
 
-        public void deleteMail(int id, int performative) throws IOException {
+        public void deleteMail(Object data, int performative) throws IOException {
+            Mail mail = (Mail) data;
             switch (performative) {
                 case ObjectWrapper.DELETE_SCHEDULE -> {
-                    if (mDAL.deleteSchedule(id)) {
+                    if (mDAL.deleteSchedule(mail.getId())) {
                         sendData(new ObjectWrapper(performative, "success"));
                     } else {
                         sendData(new ObjectWrapper(performative, "false"));
                     }
                 }
                 case ObjectWrapper.DELETE_MAIL -> {
-                    if (mDAL.deleteMail(id, user.getId())) {
+                    if (mDAL.deleteMail(mail.getId(), user.getId())) {
+                        uDAL.updateHadUsed(user, -mail.getSize());
                         sendData(new ObjectWrapper(performative, "success"));
                     } else {
                         sendData(new ObjectWrapper(performative, "false"));
                     }
                 }
             }
-
         }
 
         public byte[] longToBytes(long x) {
@@ -967,6 +1031,15 @@ public class ServerController {
 
         public Object decryptData(byte[] data) throws IOException, ClassNotFoundException {
             return sec.deserialize(sec.decryptAES(data, keyAES));
+        }
+
+        public void checkStorage(User user) {
+            boolean isFull = uDAL.checkStorage(user);
+            if (isFull) {
+                sendData(new ObjectWrapper(ObjectWrapper.CHECK_STORAGE, "isFull"));
+            } else {
+                sendData(new ObjectWrapper(ObjectWrapper.CHECK_STORAGE, "notFull"));
+            }
         }
 
         public boolean close() {
@@ -1067,17 +1140,19 @@ public class ServerController {
                                 getToUser(data.getData());
 
                             case ObjectWrapper.DELETE_SCHEDULE ->
-                                deleteMail((int) data.getData(), ObjectWrapper.DELETE_SCHEDULE);
+                                deleteMail(data.getData(), ObjectWrapper.DELETE_SCHEDULE);
 
                             case ObjectWrapper.DELETE_MAIL ->
-                                deleteMail((int) data.getData(), ObjectWrapper.DELETE_MAIL);
+                                deleteMail(data.getData(), ObjectWrapper.DELETE_MAIL);
 
                             case ObjectWrapper.KEY_AES -> {
                                 decryptKeyAES((String) data.getData());
                             }
 
                             case ObjectWrapper.INIT_SEND_FILE -> {
-                                String folder = "users/" + this.user.getEmail();
+                                StringTokenizer st = new StringTokenizer(user.getEmail(), "@");
+                                String name = st.nextToken();
+                                String folder = "users/" + name;
                                 ft.receiveFile(folder, (String) data.getData());
                             }
 
@@ -1089,7 +1164,9 @@ public class ServerController {
                                     String fileName = st.nextToken();
                                     ft.sendFile(folder, fileName);
                                 }
-
+                            }
+                            case ObjectWrapper.CHECK_STORAGE -> {
+                                checkStorage((User) data.getData());
                             }
 
                         }

@@ -6,6 +6,7 @@ package Client_View;
 
 import Client_Controller.ClientController;
 import Model.Mail;
+import Model.MailReceived;
 import Model.ObjectWrapper;
 import Model.User;
 import java.awt.Color;
@@ -15,6 +16,7 @@ import java.awt.HeadlessException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -784,8 +786,8 @@ public class MainView extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Please sign in first!!!");
         } else {
             myController.sendData(new ObjectWrapper(ObjectWrapper.INBOX_LIST, user));
+            myController.sendData(new ObjectWrapper(ObjectWrapper.CHECK_STORAGE, user));
             setBackgroundActive(pInbox);
-
         }
     }//GEN-LAST:event_pInboxMouseClicked
 
@@ -795,7 +797,6 @@ public class MainView extends javax.swing.JFrame {
         } else {
             myController.sendData(new ObjectWrapper(ObjectWrapper.SEND_LIST, user));
             setBackgroundActive(pSend);
-
         }
     }//GEN-LAST:event_pSendMouseClicked
 
@@ -812,7 +813,6 @@ public class MainView extends javax.swing.JFrame {
         if (user == null || user.getId() == 0) {
             JOptionPane.showMessageDialog(this, "Please sign in first!!!");
         } else {
-
             myController.sendData(new ObjectWrapper(ObjectWrapper.DELETE_LIST, user));
             setBackgroundActive(pDelete);
         }
@@ -821,7 +821,6 @@ public class MainView extends javax.swing.JFrame {
     private void pSpamMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_pSpamMouseClicked
         if (user == null || user.getId() == 0) {
             JOptionPane.showMessageDialog(this, "Please sign in first!!!");
-
         } else {
             myController.sendData(new ObjectWrapper(ObjectWrapper.SPAM_LIST, user));
             setBackgroundActive(pSpam);
@@ -832,7 +831,6 @@ public class MainView extends javax.swing.JFrame {
         if (user == null || user.getId() == 0) {
             JOptionPane.showMessageDialog(this, "Please sign in first!!!");
         } else {
-
             myController.sendData(new ObjectWrapper(ObjectWrapper.SCHEDULE_LIST, user));
             setBackgroundActive(pSchedule);
         }
@@ -855,6 +853,11 @@ public class MainView extends javax.swing.JFrame {
 
 //             textContent.setText("<html><i>Hello world</i></html>");
             if (mailList.get(i).getStatus() != null && mailList.get(i).getStatus().getId() == ObjectWrapper.INBOX_LIST) {
+
+                ArrayList<MailReceived> recList = new ArrayList<>();
+                recList.add(new MailReceived(this.user));
+                mailList.get(i).setToUser(recList);
+
                 myController.sendData(new ObjectWrapper(ObjectWrapper.UPDATE_TO_READ_LIST, mailList.get(i)));
             }
 
@@ -886,6 +889,10 @@ public class MainView extends javax.swing.JFrame {
                 int choice = JOptionPane.showConfirmDialog(this, "Are you sure want to recovery it", "Confirm Dialog", JOptionPane.YES_NO_OPTION);
 
                 if (choice == JOptionPane.YES_OPTION) {
+                    ArrayList<MailReceived> recList = new ArrayList<>();
+                    recList.add(new MailReceived(this.user));
+                    mailList.get(i).setToUser(recList);
+                    
                     myController.sendData(new ObjectWrapper(ObjectWrapper.UPDATE_TO_READ_LIST, mailList.get(i)));
 
                 }
@@ -906,6 +913,10 @@ public class MainView extends javax.swing.JFrame {
                 int choice = JOptionPane.showConfirmDialog(this, "Are you sure want to spam it", "Confirm Dialog", JOptionPane.YES_NO_OPTION);
 
                 if (choice == JOptionPane.YES_OPTION) {
+                    ArrayList<MailReceived> recList = new ArrayList<>();
+                    recList.add(new MailReceived(this.user));
+
+                    mailList.get(i).setToUser(recList);
                     myController.sendData(new ObjectWrapper(ObjectWrapper.UPDATE_TO_SPAM_LIST, mailList.get(i)));
 
                 }
@@ -922,22 +933,24 @@ public class MainView extends javax.swing.JFrame {
     private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
         int i = tableMail.getSelectedRow();
         if (i != -1) {
-            //            int id = Integer.parseInt(tableMail.getModel().getValueAt(i, 1).toString());
             if (mailList.get(i).getStatus() != null && (mailList.get(i).getStatus().getId() == ObjectWrapper.READ_LIST || mailList.get(i).getStatus().getId() == ObjectWrapper.SCHEDULE_LIST || mailList.get(i).getStatus().getId() == ObjectWrapper.DELETE_LIST)) {
 
                 int choice = JOptionPane.showConfirmDialog(this, "Are you sure want to delete it", "Confirm Dialog", JOptionPane.YES_NO_OPTION);
-
                 if (choice == JOptionPane.YES_OPTION) {
-
                     switch (mailList.get(i).getStatus().getId()) {
                         case ObjectWrapper.SCHEDULE_LIST ->
-                            myController.sendData(new ObjectWrapper(ObjectWrapper.DELETE_SCHEDULE, mailList.get(i).getId()));
+                            myController.sendData(new ObjectWrapper(ObjectWrapper.DELETE_SCHEDULE, mailList.get(i)));
 
                         case ObjectWrapper.DELETE_LIST ->
-                            myController.sendData(new ObjectWrapper(ObjectWrapper.DELETE_MAIL, mailList.get(i).getId()));
+                            myController.sendData(new ObjectWrapper(ObjectWrapper.DELETE_MAIL, mailList.get(i)));
 
-                        default ->
+                        default -> {
+                            ArrayList<MailReceived> recList = new ArrayList<>();
+                            recList.add(new MailReceived(this.user));
+
+                            mailList.get(i).setToUser(recList);
                             myController.sendData(new ObjectWrapper(ObjectWrapper.UPDATE_TO_DELETE_LIST, mailList.get(i)));
+                        }
                     }
 
                 }
@@ -991,8 +1004,9 @@ public class MainView extends javax.swing.JFrame {
     }//GEN-LAST:event_btnLogoutActionPerformed
 
     private void lbFileMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lbFileMouseClicked
-
-        myController.sendData(new ObjectWrapper(ObjectWrapper.INIT_RECEIVED_FILE, lbFrom.getText() + ";" + lbFile.getText()));
+        StringTokenizer st = new StringTokenizer(lbFrom.getText(), "@");
+        String name = st.nextToken();
+        myController.sendData(new ObjectWrapper(ObjectWrapper.INIT_RECEIVED_FILE, name + ";" + lbFile.getText()));
     }//GEN-LAST:event_lbFileMouseClicked
 
     public void saveFile() throws IOException {
@@ -1090,8 +1104,8 @@ public class MainView extends javax.swing.JFrame {
             row.add(mailList.get(i).getId());
 
             String toUser = "";
-            for (User user : mailList.get(i).getToUser()) {
-                toUser += user.getEmail() + ", ";
+            for (MailReceived rec : mailList.get(i).getToUser()) {
+                toUser += rec.getReceiver().getEmail() + ", ";
             }
 
             if (toUser.length() > 0) {
@@ -1134,17 +1148,18 @@ public class MainView extends javax.swing.JFrame {
             for (Mail mail : mailList.get(i).getRepList()) {
                 replies += mail.getTitle() + ", ";
             }
+
             if (replies.length() > 0) {
                 replies = replies.substring(0, replies.length() - 2);
             }
 
+            System.out.println(mailList.get(i).getSize().toString());
             row.add(replies);
             model.addRow(row);
 
         }
         tableMail.setModel(model);
         setColumnWidth(tableMail, widthHeaderList);
-
     }
 
     public void setScheduleLListToTable() {
@@ -1155,8 +1170,8 @@ public class MainView extends javax.swing.JFrame {
             row.add(mailList.get(i).getId());
 
             String toUser = "";
-            for (User user : mailList.get(i).getToUser()) {
-                toUser += user.getEmail() + ", ";
+            for (MailReceived rec : mailList.get(i).getToUser()) {
+                toUser += rec.getReceiver().getEmail() + ", ";
             }
 
             if (toUser.length() > 0) {
@@ -1217,7 +1232,6 @@ public class MainView extends javax.swing.JFrame {
                 }
             }
             to = to.substring(0, to.length() - 2);
-
             lbTo.setText(to);
 
         } else {
@@ -1227,7 +1241,6 @@ public class MainView extends javax.swing.JFrame {
 
     public void deleteSchedule(ObjectWrapper data) {
         if (!data.getData().equals("false")) {
-
             myController.sendData(new ObjectWrapper(ObjectWrapper.SCHEDULE_LIST, user));
             JOptionPane.showMessageDialog(this, "Delete schedule success");
 
@@ -1238,13 +1251,23 @@ public class MainView extends javax.swing.JFrame {
 
     public void deleteMail(ObjectWrapper data) {
         if (!data.getData().equals("false")) {
-
             myController.sendData(new ObjectWrapper(ObjectWrapper.DELETE_LIST, user));
             JOptionPane.showMessageDialog(this, "Delete mail success");
 
         } else {
             JOptionPane.showMessageDialog(this, "Delete mail false");
         }
+    }
+
+    public void checkStorage(ObjectWrapper data) {
+        if (data.getData().equals("isFull")) {
+            JOptionPane.showMessageDialog(this, "Your inbox had been full!!!");
+        }
+    }
+
+    public void IsFull(ObjectWrapper data) {
+        User u = (User) data.getData();
+        JOptionPane.showMessageDialog(this, u.getEmail() + "'s inbox had been full!!!");
     }
 
 //    public void close(Object data){
@@ -1328,6 +1351,7 @@ public class MainView extends javax.swing.JFrame {
 
     public void customInit() {
         getDomainName();
+        
         jpanelList.add(pInbox);
         jpanelList.add(pSend);
         jpanelList.add(pRead);

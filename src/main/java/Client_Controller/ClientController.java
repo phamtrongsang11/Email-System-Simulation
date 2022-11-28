@@ -308,10 +308,12 @@ public class ClientController {
                             }
 
                             case ObjectWrapper.DELETE_SCHEDULE -> {
+                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, data.getData()));  
                                 view.deleteSchedule(data);
                             }
 
                             case ObjectWrapper.DELETE_MAIL -> {
+                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, data.getData()));  
                                 view.deleteMail(data);
                             }
 
@@ -323,6 +325,14 @@ public class ClientController {
 
                             case ObjectWrapper.SCHEDULE_COMPLETE -> {
                                 view.schedule(data);
+                            }
+                            
+                            case ObjectWrapper.CHECK_STORAGE -> {
+                                view.checkStorage(data);
+                            }
+                            
+                            case ObjectWrapper.IS_FULL ->{
+                                view.IsFull(data);
                             }
 
 //                                case ObjectWrapper.SERVER_INFORM_CLIENT_NUMBER ->
