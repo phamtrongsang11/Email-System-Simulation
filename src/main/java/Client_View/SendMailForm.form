@@ -617,18 +617,17 @@
                     </Container>
                   </SubComponents>
                 </Container>
-                <Container class="javax.swing.JScrollPane" name="jScrollPane1">
+                <Container class="javax.swing.JScrollPane" name="jScrollPane2">
                   <AuxValues>
                     <AuxValue name="autoScrollPane" type="java.lang.Boolean" value="true"/>
                   </AuxValues>
 
                   <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
                   <SubComponents>
-                    <Component class="javax.swing.JTextPane" name="textContent">
+                    <Component class="javax.swing.JEditorPane" name="textContent">
                       <Properties>
-                        <Property name="contentType" type="java.lang.String" value="text/html" noResource="true"/>
                         <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-                          <Dimension value="[62, 300]"/>
+                          <Dimension value="[113, 300]"/>
                         </Property>
                       </Properties>
                     </Component>

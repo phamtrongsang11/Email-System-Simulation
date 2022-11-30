@@ -319,7 +319,7 @@ public class SignUpForm extends javax.swing.JFrame {
         String password = new String(txtPassword.getPassword());
         String confirm = new String(txtConfirm.getPassword());
         if(!password.equals(confirm)){
-            JOptionPane.showMessageDialog(this, "Confirm password npt match!");
+            JOptionPane.showMessageDialog(this, "Confirm password not match!");
             txtConfirm.setText("");
         }
     }//GEN-LAST:event_txtConfirmFocusLost

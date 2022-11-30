@@ -104,61 +104,6 @@ public class MailDAL extends MyDatabaseManager {
 
     }
 
-//    public boolean scheduleMail(Mail mail) {
-//        boolean result = false;
-//        String query = "INSERT INTO mail(Title, Content, FromID, statusID, Schedule) VALUES (?, ?, ?, ?, ?)";
-//
-//        try {
-//            PreparedStatement ps = this.getConnection().prepareStatement(query);
-//            ps.setString(1, mail.getTitle());
-//            ps.setString(2, mail.getContent());
-//            ps.setInt(3, mail.getFormUser().getId());
-//            ps.setInt(4, mail.getStatus().getId());
-//            ps.setString(5, mail.getSchedule());
-//
-//            System.out.println(ps);
-//
-//            if (ps.executeUpdate() != 0) {
-//
-//                int mailId = this.getLastID();
-//
-//                String qr = "INSERT INTO mail_received VALUES (?,?)";
-//
-//                for (User user : mail.getToUser()) {
-////                    System.out.println(user);
-//                    PreparedStatement p = this.getConnection().prepareStatement(qr);
-//                    p.setInt(1, mailId);
-//                    p.setInt(2, user.getId());
-//
-//                    //System.out.println(p);
-//                    if (p.executeUpdate() == 0) {
-//                        return false;
-//                    }
-//                }
-//
-//                if (!mail.getRepList().isEmpty()) {
-//                    String qu = "INSERT INTO mail_replies VALUES (?,?)";
-//
-//                    for (Mail m : mail.getRepList()) {
-//                        PreparedStatement p = this.getConnection().prepareStatement(qu);
-//                        p.setInt(1, mailId);
-//                        p.setInt(2, m.getId());
-//                        if (p.executeUpdate() == 0) {
-//                            return false;
-//                        }
-//                    }
-//                }
-//                result = true;
-//
-//            }
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return result;
-//
-//    }
-
     public ArrayList<Mail> getListMailByStatus(User user, int statusID) {
         ArrayList<Mail> mailList = new ArrayList<>();
 
@@ -169,8 +114,6 @@ public class MailDAL extends MyDatabaseManager {
                     + " ON mail.MailID = mail_received.MailID"
                     + " INNER JOIN user"
                     + " ON mail.FromID = user.UserID"
-                    //                    + " INNER JOIN mail_replies"
-                    //                    + " ON mail.MailID = mail_replies.MailID"
                     + " INNER JOIN mail_status"
                     + " ON mail_received.StatusID = mail_status.StatusID"
                     + " WHERE mail_received.ReceiverID = " + user.getId() + " AND "
@@ -212,10 +155,12 @@ public class MailDAL extends MyDatabaseManager {
     public Mail getReplies(Mail mail) {
         ArrayList<Mail> repList = new ArrayList<>();
         try {
-            String query = "SELECT *"
+            String query = "SELECT *, user.UserID, user.Email"
                     + " FROM mail_replies"
                     + " INNER JOIN mail"
                     + " ON mail_replies.RepID = mail.MailID"
+                    + " INNER JOIN user"
+                    + " ON mail.FromID = user.UserID"
                     + " WHERE mail_replies.MailID = " + mail.getId();
 
             ResultSet rs = this.doReadQuery(query);
@@ -223,9 +168,14 @@ public class MailDAL extends MyDatabaseManager {
 
             if (rs != null) {
                 while (rs.next()) {
+                    User u = new User();
+                    u.setId(rs.getInt("UserID"));
+                    u.setEmail(rs.getString("Email"));
+                    
                     Mail m = new Mail();
                     m.setId(rs.getInt("RepID"));
                     m.setTitle(rs.getString("Title"));
+                    m.setFormUser(u);
                     repList.add(m);
                 }
                 mail.setRepList(repList);
@@ -263,25 +213,6 @@ public class MailDAL extends MyDatabaseManager {
         return userList;
     }
 
-//    public Mail getReplyMail(Mail mail, int id) {
-//        Mail replyMail = new Mail();
-//        try {
-//            String query = "SELECT MailID, Title FROM mail where MailID= " + id;
-//            ResultSet rs = this.doReadQuery(query);
-//            //System.out.println(query);
-//            if (rs != null) {
-//                while (rs.next()) {
-//                    replyMail.setId(rs.getInt("MailID"));
-//                    replyMail.setTitle(rs.getString("Title"));
-//                }
-//            }
-//            mail.setReplyMail(replyMail);
-//        } catch (Exception ex) {
-//            ex.getMessage();
-//        }
-//
-//        return mail;
-//    }
     public int getTotalMailByStatus(User user, int statusID) {
         int total = 0;
         try {
@@ -299,7 +230,7 @@ public class MailDAL extends MyDatabaseManager {
 
             ResultSet rs = this.doReadQuery(query);
 
-            System.out.println(query);
+//            System.out.println(query);
 
             if (rs != null && rs.next()) {
                 total = rs.getInt("Total");
@@ -345,8 +276,9 @@ public class MailDAL extends MyDatabaseManager {
             if (p.executeUpdate() != 0) {
                 result = true;
             }
-            System.out.println(mail);
-            System.out.println(p);
+            
+//            System.out.println(mail);
+//            System.out.println(p);
 
         } catch (Exception e) {
             e.getMessage();

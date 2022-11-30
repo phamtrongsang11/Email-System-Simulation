@@ -108,7 +108,7 @@ public class ServerController {
         try {
             String localIP = InetAddress.getLocalHost().getHostAddress();
 
-            String api = "https://api-generator.retool.com/Ls5Jx1/data/1"; // Ghi vào dòng 1 trong DB
+            String api = "https://api-generator.retool.com/Ls5Jx1/data/1";
             String jsonData = "{\"ip\":\"" + localIP + "\"}";
             Jsoup.connect(api)
                     .ignoreContentType(true).ignoreHttpErrors(true)
@@ -128,6 +128,7 @@ public class ServerController {
 ////                System.out.println("Server sent '" + msg + "' from Client " + name + "--> Client " + client.name);
 //        }
 //    }
+    
     public void broardCastInbox(ArrayList<ClientHandler> clientList) {
 
         for (ClientHandler client : clientList) {
@@ -160,7 +161,7 @@ public class ServerController {
 
         } catch (IOException ex) {
             result = false;
-            System.out.println(ex.getMessage());
+            System.err.println(ex.getMessage());
         }
         return result;
     }
@@ -247,15 +248,6 @@ public class ServerController {
         mail.setToUser(recList);
 
         if (mDAL.sendMail(mail)) {
-//            ArrayList< ClientHandler> clientReceived = new ArrayList<>();
-//            for (User u : mail.getToUser()) {
-//                for (ClientHandler client : clientList) {
-//                    if (client.getUser().getEmail().equals(u.getEmail())) {
-//                        clientReceived.add(client);
-//
-//                    }
-//                }
-//            }
             this.broardCastInbox(clientList);
         }
     }
@@ -282,8 +274,9 @@ public class ServerController {
 
     public void displayAddUser() {
         ArrayList<User> uList = uDAL.getAllUser();
+        System.out.println("Id\tEmail\t\t\tHadUsed\t\tStorage");
         for (User u : uList) {
-            System.out.println(u.getId() + "." + u.getEmail());
+            System.out.println(u.getId() + "\t" + u.getEmail() + "\t\t" + u.getHadUsed() + "\t\t" + u.getStorage());
         }
     }
 
@@ -315,7 +308,6 @@ public class ServerController {
 
     public void menu() {
         System.out.println("Action List: ");
-//        System.out.println("1.Login admin: \n\tlogin");
         System.out.println("\t1.Set domain name server: domain <Domain Name>\n");
         System.out.println("\t2.Get info login and logout of special user: log <Email>\n");
         System.out.println("\t3.Send mail to all user: sendall\n");
@@ -325,7 +317,6 @@ public class ServerController {
         System.out.println("\t7.Unlocked special user: unlock <Email>\n");
         System.out.println("\t8.Set storage inbox user: storage <Email>\n");
         System.out.println("\t9.Logout Admin: logout\n");
-        System.out.println("\t10.Exit system: exit\n");
 
     }
 
@@ -334,191 +325,186 @@ public class ServerController {
 
         try {
             System.out.println("Hi! You need to login to perform another action!!!");
+
             do {
-                System.out.println("Enter your email: ");
-                String email = stdIn.nextLine();
+                do {
+                    System.out.println("Enter your email: ");
+                    String email = stdIn.nextLine();
 
-                if (!uDAL.checkEmailExist(email)) {
-                    System.out.println("This email is not invalid");
-                } else if (!uDAL.checkIsAdmin(email)) {
-                    System.out.println("This email didn't have prvivilage amdin");
-                } else {
-                    u.setEmail(email);
-
-                    System.out.println("Enter your password: ");
-                    String password = stdIn.nextLine();
-                    this.u.setPassword(sec.hashMD5(password));
-
-                    if (uDAL.checkLogin(this.u)) {
-                        System.out.println("Login success");
-                        break;
+                    if (!uDAL.checkEmailExist(email)) {
+                        System.out.println("This email is not invalid");
+                        
+                    } else if (!uDAL.checkIsAdmin(email)) {
+                        System.out.println("This email didn't have authoritative");
+                        
                     } else {
-                        System.out.println("Wrong password!!!");
-                    }
+                        u = new User();
+                        u.setEmail(email);
 
-//                    char[] password = console.readPassword("Enter your password: ");
-//                   
-//                    System.out.println("Enter your password: ");
-//                    String password = stdIn.nextLine();
-//                    this.u.setPassword(sec.hashMD5(password));
-                }
-            } while (true);
+                        System.out.println("Enter your password: ");
+                        String password = stdIn.nextLine();
+                        this.u.setPassword(sec.hashMD5(password));
 
-            do {
-                System.out.println("Type <help> if you don't know syntax of each action");
-                String input = stdIn.nextLine();
-                StringTokenizer st = new StringTokenizer(input, " ");
-
-                if (st.countTokens() == 1) {
-                    String action = st.nextToken();
-                    switch (action.toLowerCase()) {
-                        case "help" -> {
-                            menu();
+                        if (uDAL.checkLogin(this.u)) {
+                            System.out.println("Login success");
+                            break;
+                        } else {
+                            System.out.println("Wrong password!!!");
                         }
-                        case "logout" -> {
+                        
+                    }
+                } while (true);
+
+                do {
+                    System.out.println("Type <help> if you don't know syntax of each action");
+                    String input = stdIn.nextLine();
+                    StringTokenizer st = new StringTokenizer(input, " ");
+
+                    if (st.countTokens() == 1) {
+                        String action = st.nextToken().toLowerCase();
+                        if(action.equals("logout")){
                             this.u = null;
+                                break;
                         }
+                        
+                        switch (action) {
+                            case "help" -> {
+                                menu();
+                            }
 
-                        case "sendall" -> {
-                            System.out.println("Please enter tile you want to send: ");
-                            String title = stdIn.nextLine();
-                            System.out.println("Please enter content you want to send: ");
-                            String content = stdIn.nextLine();
+                            case "sendall" -> {
+                                System.out.println("Please enter tile you want to send: ");
+                                String title = stdIn.nextLine();
+                                System.out.println("Please enter content you want to send: ");
+                                String content = stdIn.nextLine();
 
-//                            Mail mail = new Mail(title, content, this.u, new Status(ObjectWrapper.INBOX_LIST));
-                            Mail mail = new Mail(title, content, this.u);
+                                Mail mail = new Mail(title, content, this.u);
 
-                            SendMessageToAllUser(mail);
+                                SendMessageToAllUser(mail);
+                            }
+                            case "list" -> {
+                                displayAddUser();
+                            }
+
+                            case "listlocked" -> {
+                                getListLockedUser();
+                            }
+
+//                            case "exit" -> {
+//                                for (ClientHandler client : this.clientList) {
+//                                    if (!client.close()) {
+//                                        System.out.println("sth wrong in client handler");
+//                                    }
+//                                }
+//                                executor.shutdownNow();
+//                                stdIn.close();
+//                                myServer.close();
+//                            }
+
+                            default ->
+                                System.out.println("Wrong syntax please try again!!!");
+
                         }
-                        case "list" -> {
-                            displayAddUser();
-                        }
+                    } else if (st.countTokens() == 2) {
+                        String action = st.nextToken();
+                        switch (action.toLowerCase()) {
 
-                        case "listlocked" -> {
-                            getListLockedUser();
-                        }
-
-                        case "exit" -> {
-                            for (ClientHandler client : this.clientList) {
-                                if (!client.close()) {
-                                    System.out.println("sth wrong in client handler");
+                            case "domain" -> {
+                                if (st.hasMoreTokens()) {
+                                    String name = st.nextToken();
+                                    updateDomainName(name);
+                                    this.domainName = name;
+                                    writeDomainName();
                                 }
                             }
 
-                            executor.shutdownNow();
-                            stdIn.close();
-                            myServer.close();
-                        }
-
-                        default ->
-                            System.out.println("Wrong syntax please try again!!!");
-
-                    }
-                } else if (st.countTokens() == 2) {
-                    String action = st.nextToken();
-                    switch (action.toLowerCase()) {
-
-                        case "domain" -> {
-                            if (st.hasMoreTokens()) {
-                                String name = st.nextToken();
-                                updateDomainName(name);
-                                this.domainName = name;
-                                writeDomainName();
-                            }
-                        }
-
-                        case "log" -> {
-                            if (st.hasMoreTokens()) {
-                                String email = st.nextToken();
-                                if (Validation.validationMail(email)) {
-                                    int uId = uDAL.getId(email);
-                                    if (uId != 0) {
-                                        getInfoLogUser(email);
-                                    } else {
-                                        System.out.println("This email is not exist");
-                                    }
-                                } else {
-                                    System.out.println("This email is invalid");
-                                }
-                            }
-                        }
-
-                        case "lock" -> {
-//                            System.out.println("Please enter email of user you want to lock: ");
-//                            String emailLock = stdIn.nextLine();
-//                            lockOrUnlockUser(emailLock, 1);
-                            if (st.hasMoreTokens()) {
-                                String email = st.nextToken();
-                                if (Validation.validationMail(email)) {
-                                    int uId = uDAL.getId(email);
-                                    if (uId != 0) {
-                                        if (!uDAL.checkIsLock(email)) {
-                                            lockOrUnlockUser(email, 1);
+                            case "log" -> {
+                                if (st.hasMoreTokens()) {
+                                    String email = st.nextToken();
+                                    if (Validation.validationMail(email)) {
+                                        int uId = uDAL.getId(email);
+                                        if (uId != 0) {
+                                            getInfoLogUser(email);
                                         } else {
-                                            System.out.println("This email had been locked");
+                                            System.out.println("This email is not exist");
                                         }
                                     } else {
-                                        System.out.println("This email is not exist");
+                                        System.out.println("This email is invalid");
                                     }
-                                } else {
-                                    System.out.println("This email is invalid");
                                 }
                             }
 
-                        }
-                        case "unlock" -> {
-//                            System.out.println("Please enter email of user you want to unlock: ");
-//                            String emailunclock = stdIn.nextLine();
-//                            lockOrUnlockUser(emailunclock, 1);
-
-                            if (st.hasMoreTokens()) {
-                                String email = st.nextToken();
-                                if (Validation.validationMail(email)) {
-                                    int uId = uDAL.getId(email);
-                                    if (uId != 0) {
-                                        if (uDAL.checkIsLock(email)) {
-                                            lockOrUnlockUser(email, 0);
+                            case "lock" -> {
+                                if (st.hasMoreTokens()) {
+                                    String email = st.nextToken();
+                                    if (Validation.validationMail(email)) {
+                                        int uId = uDAL.getId(email);
+                                        if (uId != 0) {
+                                            if (!uDAL.checkIsLock(email)) {
+                                                lockOrUnlockUser(email, 1);
+                                            } else {
+                                                System.out.println("This email had been locked");
+                                            }
                                         } else {
-                                            System.out.println("This email hadn't been locked");
+                                            System.out.println("This email is not exist");
                                         }
                                     } else {
-                                        System.out.println("This email is not exist");
+                                        System.out.println("This email is invalid");
                                     }
-                                } else {
-                                    System.out.println("This email is invalid");
-                                }
-                            }
-
-                        }
-
-                        case "storage" -> {
-                            if (st.hasMoreTokens()) {
-                                String email = st.nextToken();
-                                if (Validation.validationMail(email)) {
-                                    int uId = uDAL.getId(email);
-                                    if (uId != 0) {
-                                        System.out.println("Please enter storage you want to set: ");
-                                        String in = stdIn.nextLine();
-                                        try {
-                                            Double value = Double.valueOf(in);
-                                            updateStorage(email, value);
-                                        } catch (NumberFormatException ex) {
-                                            System.out.println("Value is not correct format");
-                                        }
-                                    } else {
-                                        System.out.println("This email is not exist");
-                                    }
-                                } else {
-                                    System.out.println("This email is invalid");
                                 }
 
                             }
-                        }
+                            case "unlock" -> {
 
-                        default ->
-                            System.out.println("Wrong syntax please try again!!!");
+                                if (st.hasMoreTokens()) {
+                                    String email = st.nextToken();
+                                    if (Validation.validationMail(email)) {
+                                        int uId = uDAL.getId(email);
+                                        if (uId != 0) {
+                                            if (uDAL.checkIsLock(email)) {
+                                                lockOrUnlockUser(email, 0);
+                                            } else {
+                                                System.out.println("This email hadn't been locked");
+                                            }
+                                        } else {
+                                            System.out.println("This email is not exist");
+                                        }
+                                    } else {
+                                        System.out.println("This email is invalid");
+                                    }
+                                }
+
+                            }
+
+                            case "storage" -> {
+                                if (st.hasMoreTokens()) {
+                                    String email = st.nextToken();
+                                    if (Validation.validationMail(email)) {
+                                        int uId = uDAL.getId(email);
+                                        if (uId != 0) {
+                                            System.out.println("Please enter storage you want to set: ");
+                                            String in = stdIn.nextLine();
+                                            try {
+                                                Double value = Double.valueOf(in);
+                                                updateStorage(email, value);
+                                            } catch (NumberFormatException ex) {
+                                                System.out.println("Value is not correct format");
+                                            }
+                                        } else {
+                                            System.out.println("This email is not exist");
+                                        }
+                                    } else {
+                                        System.out.println("This email is invalid");
+                                    }
+
+                                }
+                            }
+
+                            default ->
+                                System.out.println("Wrong syntax please try again!!!");
+                        }
                     }
-                }
+                } while (true);
             } while (true);
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -545,7 +531,6 @@ public class ServerController {
                     executor.execute(client);
                     client.sendPublicKey();
 
-//                    myUser.put(sp, new User());
                     System.out.println("Number of client connecting to the server: " + clientList.size());
 //                    publicClientNumber();
                 }
@@ -619,7 +604,6 @@ public class ServerController {
             if (!domainName.isEmpty()) {
                 sendData(new ObjectWrapper(ObjectWrapper.GET_DOMAIN_NAME, domainName));
             } else {
-                System.out.println("fail");
                 sendData(new ObjectWrapper(ObjectWrapper.GET_DOMAIN_NAME, "fail"));
             }
         }
@@ -752,7 +736,6 @@ public class ServerController {
                         }
                     }
                 }
-//                System.out.println("received: " + clientReceived);
 
                 for (int i = 0; i < mail.getToUser().size(); i++) {
                     int statusId = mail.getToUser().get(i).getStatus().getId();
@@ -770,12 +753,7 @@ public class ServerController {
                             sendData(new ObjectWrapper(ObjectWrapper.REPLY_SEND_MAIL, "success"));
                         }
                         case ObjectWrapper.SCHEDULE_LIST -> {
-                            System.out.println(mail.getFormUser());
 
-//                        getTotalMailList(mail.getFormUser());
-//                        getScheduleList(mail.getFormUser(), ObjectWrapper.SCHEDULE_LIST);
-//                        oos.writeObject(new ObjectWrapper(ObjectWrapper.UNICAST_SCHEDULE, mail.getFormUser()));
-//                        this.getScheduleList(mail.getFormUser(), ObjectWrapper.SCHEDULE_LIST);
                             sendData(new ObjectWrapper(ObjectWrapper.REPLY_SEND_MAIL, mail.getFormUser()));
                             scheduleSendMail(mail);
                         }
@@ -838,11 +816,6 @@ public class ServerController {
             }
         }
 
-//
-//        public void updateSchedule(Object data, int status) throws IOException {
-//            getScheduleList(data, status);
-//            getTotalMailList(data);
-//        }
         public void scheduleSendMail(Mail mail) {
             try {
                 Timer timer = new Timer();
@@ -852,7 +825,6 @@ public class ServerController {
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 Date date = (Date) format.parse(time);
 
-                System.out.println(date);
 
                 timer.schedule(
                         new sendTask(myThread),
@@ -867,7 +839,7 @@ public class ServerController {
             ArrayList<Mail> mailList = mDAL.getSendMail(user, ObjectWrapper.SCHEDULE_LIST);
             if (!mailList.isEmpty()) {
                 for (Mail m : mailList) {
-                    System.out.println(m);
+                    
                     scheduleSendMail(m);
                 }
             }
@@ -962,59 +934,6 @@ public class ServerController {
             return buffer.getLong();
         }
 
-//        public void sendFile(String path) {
-//            try {
-////                int bytes = 0;
-//////                File file = new File(path);
-////                File file = new File("users/" + this.user.getEmail(), path);
-////
-//                int bytes = 0;
-//                DataInputStream dataInputStream = new DataInputStream(mySocket.getInputStream());
-//
-//                DataOutputStream dataOutputStream = new DataOutputStream(mySocket.getOutputStream());
-//
-//                File file = new File("users/" + this.user.getEmail(), path);
-//                FileInputStream fileInputStream = new FileInputStream(file);
-//
-//                dataOutputStream.writeLong(file.length());
-//
-//                byte[] buffer = new byte[4 * 1024];
-//                while ((bytes = fileInputStream.read(buffer)) != -1) {
-//
-//                    dataOutputStream.write(buffer, 0, bytes);
-//                    dataOutputStream.flush();
-//                }
-//                System.out.println("Sending file successfully");
-//                fileInputStream.close();
-//            } catch (IOException e) {
-//                System.err.println(e);
-//            }
-//        }
-//
-//        public void receiveFile(String folder, String fileName) throws ClassNotFoundException {
-//            try {
-////
-////                File file = new File("users/" + this.user.getEmail(), fileName);
-////                FileOutputStream fileOutputStream = new FileOutputStream(file);
-//
-//                File file = new File(folder, fileName);
-//                DataInputStream dataInputStream = new DataInputStream(mySocket.getInputStream());
-//                int bytes = 0;
-//                FileOutputStream fileOutputStream = new FileOutputStream(file);
-//
-//                long size = dataInputStream.readLong();
-//                byte[] buffer = new byte[4 * 1024];
-//                while (size > 0 && (bytes = dataInputStream.read(buffer, 0, (int) Math.min(buffer.length, size))) != -1) {
-//
-//                    fileOutputStream.write(buffer, 0, bytes);
-//                    size -= bytes;
-//                }
-////                System.out.println("File is Received");
-//                fileOutputStream.close();
-//            } catch (IOException ex) {
-//                System.err.println(ex);
-//            }
-//        }
         public void sendPublicKey() throws IOException {
             byte[] key = sec.readPublicKeyRSA();
             oos.writeObject(new ObjectWrapper(ObjectWrapper.PUBLIC_KEY, key));
@@ -1022,7 +941,7 @@ public class ServerController {
 
         public void decryptKeyAES(String key) {
             keyAES = sec.decryptionRSA(key);
-            System.out.println(keyAES);
+//            System.out.println(keyAES);
         }
 
         public byte[] encryptData(Object data) throws IOException {
@@ -1076,12 +995,10 @@ public class ServerController {
                     Object object;
                     if (flag) {
                         object = ois.readObject();
-                        System.out.println("1" + object);
                         flag = false;
 
                     } else {
                         object = decryptData((byte[]) ois.readObject());
-                        System.out.println(object);
 
                     }
                     if (object instanceof ObjectWrapper data) {
@@ -1093,15 +1010,19 @@ public class ServerController {
 
                             case ObjectWrapper.SIGNIN_USER ->
                                 signin(data.getData());
+                                
                             case ObjectWrapper.SIGNUP_USER ->
                                 signup(data.getData(), oos);
+                                
                             case ObjectWrapper.CHECK_RECEPIENT ->
                                 checkRecipient(data.getData(), oos);
 
                             case ObjectWrapper.SEND_MAIL ->
                                 sendMail(data.getData(), oos);
+                                
                             case ObjectWrapper.INBOX_LIST ->
                                 getMailByStatus(data.getData(), ObjectWrapper.INBOX_LIST);
+                                
                             case ObjectWrapper.SEND_LIST ->
                                 getSendMailList(data.getData());
 
@@ -1213,7 +1134,7 @@ public class ServerController {
 
         public void run() {
             if (mDAL.updateStatus(mail, ObjectWrapper.INBOX_LIST)) {
-                System.out.println("success");
+                System.out.println("send schedule mail success");
                 client.sendData(new ObjectWrapper(ObjectWrapper.SCHEDULE_COMPLETE, user));
 
             } else {

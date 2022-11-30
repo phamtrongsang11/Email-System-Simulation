@@ -103,7 +103,7 @@ public class MainView extends javax.swing.JFrame {
         jPanel18 = new javax.swing.JPanel();
         jPanel4 = new javax.swing.JPanel();
         jPanel11 = new javax.swing.JPanel();
-        jTextField1 = new javax.swing.JTextField();
+        txtSearch = new javax.swing.JTextField();
         btnSearch = new javax.swing.JButton();
         jPanel17 = new javax.swing.JPanel();
         lbUser = new javax.swing.JLabel();
@@ -436,8 +436,8 @@ public class MainView extends javax.swing.JFrame {
         jPanel11.setBackground(new java.awt.Color(34, 39, 54));
         jPanel11.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(255, 255, 255), 1, true));
 
-        jTextField1.setPreferredSize(new java.awt.Dimension(220, 30));
-        jPanel11.add(jTextField1);
+        txtSearch.setPreferredSize(new java.awt.Dimension(220, 30));
+        jPanel11.add(txtSearch);
 
         btnSearch.setBackground(new java.awt.Color(98, 110, 212));
         btnSearch.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
@@ -446,6 +446,11 @@ public class MainView extends javax.swing.JFrame {
         btnSearch.setText("Search");
         btnSearch.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         btnSearch.setPreferredSize(new java.awt.Dimension(110, 30));
+        btnSearch.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSearchActionPerformed(evt);
+            }
+        });
         jPanel11.add(btnSearch);
 
         jPanel4.add(jPanel11);
@@ -585,7 +590,7 @@ public class MainView extends javax.swing.JFrame {
         jPanel22.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 10, 5));
 
         lbTitleFrom.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
-        lbTitleFrom.setText("FORM:");
+        lbTitleFrom.setText("FROM:");
         jPanel22.add(lbTitleFrom);
 
         lbFrom.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
@@ -672,7 +677,7 @@ public class MainView extends javax.swing.JFrame {
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(lbSubject, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 785, Short.MAX_VALUE)
+            .addComponent(lbSubject, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 735, Short.MAX_VALUE)
             .addGroup(jPanel6Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -690,7 +695,7 @@ public class MainView extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(lbSubject)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 179, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 191, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(lbTitleFile)
@@ -757,16 +762,12 @@ public class MainView extends javax.swing.JFrame {
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         if (myController != null) {
-
             myController.sendData(new ObjectWrapper(ObjectWrapper.SIGNOUT, user));
             myController.sendData(new ObjectWrapper(ObjectWrapper.USER_EXIT, ""));
-
             if (myController.closeConnection()) {
-
                 System.exit(0);
             }
         }
-
     }//GEN-LAST:event_formWindowClosing
 
     private void btnComposeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnComposeActionPerformed
@@ -851,7 +852,6 @@ public class MainView extends javax.swing.JFrame {
             textContent.setContentType("text/html");
             textContent.setText(mailList.get(i).getContent());
 
-//             textContent.setText("<html><i>Hello world</i></html>");
             if (mailList.get(i).getStatus() != null && mailList.get(i).getStatus().getId() == ObjectWrapper.INBOX_LIST) {
 
                 ArrayList<MailReceived> recList = new ArrayList<>();
@@ -883,22 +883,24 @@ public class MainView extends javax.swing.JFrame {
     }//GEN-LAST:event_tableMailMouseClicked
 
     private void btnRecoveryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRecoveryActionPerformed
-        int i = tableMail.getSelectedRow();
-        if (i != -1) {
-            if (mailList.get(i).getStatus() != null && mailList.get(i).getStatus().getId() != ObjectWrapper.READ_LIST) {
-                int choice = JOptionPane.showConfirmDialog(this, "Are you sure want to recovery it", "Confirm Dialog", JOptionPane.YES_NO_OPTION);
+        if (tableMail.getSelectedRows().length > 0) {
+            int[] rows = tableMail.getSelectedRows();
+            int choice = JOptionPane.showConfirmDialog(this, "Are you sure want to recovery it", "Confirm Dialog", JOptionPane.YES_NO_OPTION);
+            if (choice == JOptionPane.YES_OPTION) {
+                for (int idx = 0; idx < rows.length; idx++) {
+                    if (mailList.get(rows[idx]).getStatus() != null && mailList.get(rows[idx]).getStatus().getId() != ObjectWrapper.READ_LIST) {
 
-                if (choice == JOptionPane.YES_OPTION) {
-                    ArrayList<MailReceived> recList = new ArrayList<>();
-                    recList.add(new MailReceived(this.user));
-                    mailList.get(i).setToUser(recList);
-                    
-                    myController.sendData(new ObjectWrapper(ObjectWrapper.UPDATE_TO_READ_LIST, mailList.get(i)));
+                        ArrayList<MailReceived> recList = new ArrayList<>();
+                        recList.add(new MailReceived(this.user));
 
+                        mailList.get(rows[idx]).setToUser(recList);
+
+                        myController.sendData(new ObjectWrapper(ObjectWrapper.UPDATE_TO_READ_LIST, mailList.get(rows[idx])));
+
+                    } else {
+                        JOptionPane.showMessageDialog(this, "This action only perform in spam or delete list mail");
+                    }
                 }
-
-            } else {
-                JOptionPane.showMessageDialog(this, "This action only perform in spam or delete list mail");
             }
 
         } else {
@@ -907,57 +909,61 @@ public class MainView extends javax.swing.JFrame {
     }//GEN-LAST:event_btnRecoveryActionPerformed
 
     private void btnSpamActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSpamActionPerformed
-        int i = tableMail.getSelectedRow();
-        if (i != -1) {
-            if (mailList.get(i).getStatus() != null && mailList.get(i).getStatus().getId() == ObjectWrapper.READ_LIST) {
-                int choice = JOptionPane.showConfirmDialog(this, "Are you sure want to spam it", "Confirm Dialog", JOptionPane.YES_NO_OPTION);
+        if (tableMail.getSelectedRows().length > 0) {
+            int[] rows = tableMail.getSelectedRows();
+            int choice = JOptionPane.showConfirmDialog(this, "Are you sure want to recovery it", "Confirm Dialog", JOptionPane.YES_NO_OPTION);
 
-                if (choice == JOptionPane.YES_OPTION) {
-                    ArrayList<MailReceived> recList = new ArrayList<>();
-                    recList.add(new MailReceived(this.user));
+            if (choice == JOptionPane.YES_OPTION) {
+                for (int idx = 0; idx < rows.length; idx++) {
+                    if (mailList.get(rows[idx]).getStatus() != null && mailList.get(rows[idx]).getStatus().getId() == ObjectWrapper.READ_LIST) {
 
-                    mailList.get(i).setToUser(recList);
-                    myController.sendData(new ObjectWrapper(ObjectWrapper.UPDATE_TO_SPAM_LIST, mailList.get(i)));
+                        ArrayList<MailReceived> recList = new ArrayList<>();
+                        recList.add(new MailReceived(this.user));
 
+                        mailList.get(rows[idx]).setToUser(recList);
+                        myController.sendData(new ObjectWrapper(ObjectWrapper.UPDATE_TO_SPAM_LIST, mailList.get(rows[idx])));
+
+                    } else {
+                        JOptionPane.showMessageDialog(this, "This action only perform in read list mail");
+                    }
                 }
-
-            } else {
-                JOptionPane.showMessageDialog(this, "This action only perform in read list mail");
             }
-
         } else {
             JOptionPane.showMessageDialog(this, "Please choose mail you want to perform action!!!");
         }
+
     }//GEN-LAST:event_btnSpamActionPerformed
 
     private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
-        int i = tableMail.getSelectedRow();
-        if (i != -1) {
-            if (mailList.get(i).getStatus() != null && (mailList.get(i).getStatus().getId() == ObjectWrapper.READ_LIST || mailList.get(i).getStatus().getId() == ObjectWrapper.SCHEDULE_LIST || mailList.get(i).getStatus().getId() == ObjectWrapper.DELETE_LIST)) {
+        if (tableMail.getSelectedRows().length > 0) {
+            int[] rows = tableMail.getSelectedRows();
+            int choice = JOptionPane.showConfirmDialog(this, "Are you sure want to delete it", "Confirm Dialog", JOptionPane.YES_NO_OPTION);
+            if (choice == JOptionPane.YES_OPTION) {
+                for (int idx = 0; idx < rows.length; idx++) {
+                    if (mailList.get(rows[idx]).getStatus() != null && (mailList.get(rows[idx]).getStatus().getId() == ObjectWrapper.READ_LIST || mailList.get(rows[idx]).getStatus().getId() == ObjectWrapper.SCHEDULE_LIST || mailList.get(rows[idx]).getStatus().getId() == ObjectWrapper.DELETE_LIST)) {
 
-                int choice = JOptionPane.showConfirmDialog(this, "Are you sure want to delete it", "Confirm Dialog", JOptionPane.YES_NO_OPTION);
-                if (choice == JOptionPane.YES_OPTION) {
-                    switch (mailList.get(i).getStatus().getId()) {
-                        case ObjectWrapper.SCHEDULE_LIST ->
-                            myController.sendData(new ObjectWrapper(ObjectWrapper.DELETE_SCHEDULE, mailList.get(i)));
+                        switch (mailList.get(rows[idx]).getStatus().getId()) {
+                            case ObjectWrapper.SCHEDULE_LIST ->
+                                myController.sendData(new ObjectWrapper(ObjectWrapper.DELETE_SCHEDULE, mailList.get(rows[idx])));
 
-                        case ObjectWrapper.DELETE_LIST ->
-                            myController.sendData(new ObjectWrapper(ObjectWrapper.DELETE_MAIL, mailList.get(i)));
+                            case ObjectWrapper.DELETE_LIST ->
+                                myController.sendData(new ObjectWrapper(ObjectWrapper.DELETE_MAIL, mailList.get(rows[idx])));
 
-                        default -> {
-                            ArrayList<MailReceived> recList = new ArrayList<>();
-                            recList.add(new MailReceived(this.user));
+                            default -> {
+                                ArrayList<MailReceived> recList = new ArrayList<>();
+                                recList.add(new MailReceived(this.user));
 
-                            mailList.get(i).setToUser(recList);
-                            myController.sendData(new ObjectWrapper(ObjectWrapper.UPDATE_TO_DELETE_LIST, mailList.get(i)));
+                                mailList.get(rows[idx]).setToUser(recList);
+                                myController.sendData(new ObjectWrapper(ObjectWrapper.UPDATE_TO_DELETE_LIST, mailList.get(rows[idx])));
+                            }
                         }
+
+                    } else {
+                        JOptionPane.showMessageDialog(this, "This action only perform in read list mail");
                     }
-
                 }
-
-            } else {
-                JOptionPane.showMessageDialog(this, "This action only perform in read list mail");
             }
+
         } else {
             JOptionPane.showMessageDialog(this, "Please choose mail you want to perform action!!!");
         }
@@ -977,7 +983,6 @@ public class MainView extends javax.swing.JFrame {
                 }
                 replies.add(mailList.get(rows[i]));
             }
-            System.out.println(replies);
 
             for (ObjectWrapper func : myController.getActiveUI()) {
                 if (func.getData() instanceof SendMailForm sendMailForm) {
@@ -1008,6 +1013,28 @@ public class MainView extends javax.swing.JFrame {
         String name = st.nextToken();
         myController.sendData(new ObjectWrapper(ObjectWrapper.INIT_RECEIVED_FILE, name + ";" + lbFile.getText()));
     }//GEN-LAST:event_lbFileMouseClicked
+
+    private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
+        ArrayList<Mail> result = new ArrayList<>();
+        if (!txtSearch.getText().isEmpty()) {
+            String nameSearch = txtSearch.getText();
+            if (mailList.get(0).getStatus() != null && mailList.get(0).getStatus().getId() != ObjectWrapper.SCHEDULE_LIST) {
+                for (Mail m : mailList) {
+
+                    StringTokenizer st = new StringTokenizer(m.getFormUser().getEmail(), "@");
+                    String name = st.nextToken();
+                    if (nameSearch.toLowerCase().contains(name.toLowerCase())) {
+                        result.add(m);
+                    }
+
+                    this.setValueToTable(result);
+
+                }
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Please enter name you want to search!!!");
+        }
+    }//GEN-LAST:event_btnSearchActionPerformed
 
     public void saveFile() throws IOException {
 //        File saveFile = myController.receiveFile(folder, lbFile.getText());
@@ -1067,12 +1094,14 @@ public class MainView extends javax.swing.JFrame {
             mailList = (ArrayList<Mail>) data.getData();
             if (!mailList.isEmpty()) {
                 if (mailList.get(0).getFormUser() == null) {
-                    this.setSendMailListToTable();
+                    this.setSendMailListToTable(mailList);
                 } else {
-                    setValueToTable();
+                    setValueToTable(mailList);
                 }
             }
         } else {
+            model = this.initTableModel(model, headerTable);
+            tableMail.setModel(model);
             JOptionPane.showMessageDialog(this, "You don't have any mail yet");
         }
     }
@@ -1081,8 +1110,10 @@ public class MainView extends javax.swing.JFrame {
         if (!data.getData().equals("empty") && data.getData() instanceof ArrayList<?>) {
             mailList.clear();
             mailList = (ArrayList<Mail>) data.getData();
-            this.setScheduleLListToTable();
+            this.setScheduleLListToTable(mailList);
         } else {
+            model = this.initTableModel(model, headerTable);
+            tableMail.setModel(model);
             JOptionPane.showMessageDialog(this, "You don't have any mail yet");
         }
     }
@@ -1096,7 +1127,7 @@ public class MainView extends javax.swing.JFrame {
         return model;
     }
 
-    public void setSendMailListToTable() {
+    public void setSendMailListToTable(ArrayList<Mail> mailList) {
 
         model = this.initTableModel(model, headerTableSendMail);
         for (int i = 0; i < mailList.size(); i++) {
@@ -1133,7 +1164,7 @@ public class MainView extends javax.swing.JFrame {
 
     }
 
-    public void setValueToTable() {
+    public void setValueToTable(ArrayList<Mail> mailList) {
 
         model = this.initTableModel(model, headerTable);
 
@@ -1145,12 +1176,16 @@ public class MainView extends javax.swing.JFrame {
             row.add(mailList.get(i).getTime());
 
             String replies = "";
-            for (Mail mail : mailList.get(i).getRepList()) {
-                replies += mail.getTitle() + ", ";
-            }
 
-            if (replies.length() > 0) {
-                replies = replies.substring(0, replies.length() - 2);
+            if (!mailList.get(i).getRepList().isEmpty()) {
+                for (Mail mail : mailList.get(i).getRepList()) {
+                    if (mail.getFormUser().getId() == this.user.getId()) {
+                        replies += mail.getTitle() + ", ";
+                    }
+                }
+                if (replies.length() > 0) {
+                    replies = replies.substring(0, replies.length() - 2);
+                }
             }
 
             System.out.println(mailList.get(i).getSize().toString());
@@ -1162,7 +1197,7 @@ public class MainView extends javax.swing.JFrame {
         setColumnWidth(tableMail, widthHeaderList);
     }
 
-    public void setScheduleLListToTable() {
+    public void setScheduleLListToTable(ArrayList<Mail> mailList) {
 
         model = this.initTableModel(model, headerSchedule);
         for (int i = 0; i < mailList.size(); i++) {
@@ -1231,7 +1266,9 @@ public class MainView extends javax.swing.JFrame {
                     to += u.getEmail() + ", ";
                 }
             }
-            to = to.substring(0, to.length() - 2);
+            if (!to.isEmpty()) {
+                to = to.substring(0, to.length() - 2);
+            }
             lbTo.setText(to);
 
         } else {
@@ -1318,6 +1355,8 @@ public class MainView extends javax.swing.JFrame {
         lbUser.setText("");
         lbRep.setText("");
         lbTo.setText("");
+        lbFrom.setText("");
+        lbTime.setText("");
         lbSubject.setText("Subject Mail");
         textContent.setText("Content");
 
@@ -1351,7 +1390,7 @@ public class MainView extends javax.swing.JFrame {
 
     public void customInit() {
         getDomainName();
-        
+
         jpanelList.add(pInbox);
         jpanelList.add(pSend);
         jpanelList.add(pRead);
@@ -1469,7 +1508,6 @@ public class MainView extends javax.swing.JFrame {
     private javax.swing.JSeparator jSeparator2;
     private javax.swing.JSeparator jSeparator4;
     private javax.swing.JSeparator jSeparator5;
-    private javax.swing.JTextField jTextField1;
     private javax.swing.JLabel lbDelete;
     private javax.swing.JLabel lbFile;
     private javax.swing.JLabel lbFrom;
@@ -1502,6 +1540,7 @@ public class MainView extends javax.swing.JFrame {
     private javax.swing.JPanel pSpam;
     private javax.swing.JTable tableMail;
     private javax.swing.JEditorPane textContent;
+    private javax.swing.JTextField txtSearch;
     // End of variables declaration//GEN-END:variables
     private DefaultTableModel model = new DefaultTableModel();
     private int[] widthHeaderList = {50, 200, 250, 150, 150, 250};

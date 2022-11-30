@@ -19,6 +19,8 @@ public class User implements Serializable {
     private String lastName;
     private String email;
     private String password;
+    private double hadUsed;
+    private double storage;
     private boolean isLocked = false;
     private boolean isAdmin = false;
     
@@ -100,6 +102,24 @@ public class User implements Serializable {
     public void setIsAdmin(boolean isAdmin) {
         this.isAdmin = isAdmin;
     }
+
+    public double getHadUsed() {
+        return hadUsed;
+    }
+
+    public void setHadUsed(double hadUsed) {
+        this.hadUsed = hadUsed;
+    }
+
+    public double getStorage() {
+        return storage;
+    }
+
+    public void setStorage(double storage) {
+        this.storage = storage;
+    }
+    
+    
     
     @Override
     public String toString() {

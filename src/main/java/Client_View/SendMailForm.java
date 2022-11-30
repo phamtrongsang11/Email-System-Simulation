@@ -69,9 +69,7 @@ public class SendMailForm extends javax.swing.JFrame {
     Map<TextAttribute, Integer> fontAttributes = new HashMap<TextAttribute, Integer>();
     private String fontName[];
     private Integer array[];
-    private String content;
 
-//    private String fileName;
     /**
      * Creates new form Mail_Box_UI
      */
@@ -156,8 +154,8 @@ public class SendMailForm extends javax.swing.JFrame {
         btnBold = new javax.swing.JButton();
         btnItalic = new javax.swing.JButton();
         btnUnder = new javax.swing.JButton();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        textContent = new javax.swing.JTextPane();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        textContent = new javax.swing.JEditorPane();
         jPanel7 = new javax.swing.JPanel();
         jLabel4 = new javax.swing.JLabel();
         txtPath = new javax.swing.JTextField();
@@ -420,11 +418,10 @@ public class SendMailForm extends javax.swing.JFrame {
 
         jPanel13.add(jPanel8);
 
-        textContent.setContentType("text/html"); // NOI18N
-        textContent.setPreferredSize(new java.awt.Dimension(62, 300));
-        jScrollPane1.setViewportView(textContent);
+        textContent.setPreferredSize(new java.awt.Dimension(113, 300));
+        jScrollPane2.setViewportView(textContent);
 
-        jPanel13.add(jScrollPane1);
+        jPanel13.add(jScrollPane2);
 
         jPanel7.setBackground(new java.awt.Color(34, 39, 54));
         jPanel7.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(255, 255, 255), 1, true));
@@ -523,14 +520,15 @@ public class SendMailForm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnSendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSendActionPerformed
-        /*
+
         if (this.checkEmptyInput()) {
             String subject = txtSubject.getText();
-            String content = textContent.getText();
-//            String content = convertStringToHTML(textContent.getText());
+//            String content = textContent.getText();
+            String content = convertStringToHTML(textContent.getText());
             Mail mail;
             if (replies.isEmpty()) {
                 ArrayList<MailReceived> recList = new ArrayList<>();
+                System.out.println("toList: " + toList);
                 for (User u : toList) {
                     MailReceived rec = new MailReceived(u);
                     recList.add(rec);
@@ -566,14 +564,15 @@ public class SendMailForm extends javax.swing.JFrame {
                 }
                 mail = new Mail(subject, content, view.getUser(), recList);
                 mail.setRepList(replies);
-                System.out.println(mail);
             }
 
-//            String dateTime = this.dateTimePicker.getDatePicker().getDateStringOrEmptyString() + " " + this.dateTimePicker.getTimePicker().getTimeStringOrEmptyString();
             if (!dateTimePicker.getTimePicker().toString().isBlank()) {
                 String dateTime = this.dateTimePicker.getDatePicker().getDateStringOrEmptyString() + " " + this.dateTimePicker.getTimePicker().getTimeStringOrEmptyString();
                 mail.setSchedule(dateTime);
-                mail.getStatus().setId(ObjectWrapper.SCHEDULE_LIST);
+                
+                for (MailReceived rec : mail.getToUser()) {
+                   rec.getStatus().setId(ObjectWrapper.SCHEDULE_LIST);
+                }
             }
 
             if (!txtPath.getText().isEmpty()) {
@@ -591,21 +590,16 @@ public class SendMailForm extends javax.swing.JFrame {
                 Double sizeInMb = (Double) (fileLength / (1024 * 1024));
 
                 sizeInMb = (double) Math.round(sizeInMb * 100000d) / 100000d;
-                System.out.println(sizeInMb);
+
                 mail.setSize(sizeInMb);
                 mail.setFile(pathNew);
             }
-//            System.out.println(mail);
-//            System.out.println(content);
+
             mySocket.sendData(new ObjectWrapper(ObjectWrapper.SEND_MAIL, mail));
         } else {
             JOptionPane.showMessageDialog(this, "Please enter all input required!!!");
         }
-         */
-        
-      
-        this.outputHTMLfile();
-        System.out.println(writeSelection());
+
     }//GEN-LAST:event_btnSendActionPerformed
 
     private void txtToFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtToFocusLost
@@ -628,9 +622,11 @@ public class SendMailForm extends javax.swing.JFrame {
     }//GEN-LAST:event_txtToFocusLost
 
     private void txtMultipleFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtMultipleFocusLost
-        String input = txtMultiple.getText().trim();
+        String input = txtMultiple.getText().replaceAll("\\s+", "");
+        nameToList.clear();
+        toList.clear();
         if (!input.isEmpty()) {
-            StringTokenizer st = new StringTokenizer(input, ";");
+            StringTokenizer st = new StringTokenizer(input, ",");
             while (st.hasMoreTokens()) {
                 String email = st.nextToken() + txtDomainBcc.getText();
                 if (!Validation.validationMail(email)) {
@@ -639,8 +635,13 @@ public class SendMailForm extends javax.swing.JFrame {
                     return;
                 }
                 nameToList.add(email);
-
             }
+            if(nameToList.contains(view.getUser().getEmail())){
+                JOptionPane.showMessageDialog(this, "You can not send to yourself");
+                txtMultiple.setText("");
+                return;
+            }
+            System.out.println("nameto: " + nameToList);
             mySocket.sendData(new ObjectWrapper(ObjectWrapper.CHECK_RECEPIENTS, nameToList));
         }
     }//GEN-LAST:event_txtMultipleFocusLost
@@ -666,12 +667,6 @@ public class SendMailForm extends javax.swing.JFrame {
 
         this.dateTimePicker.clear();
 
-//        String dateTime = this.dateTimePicker.getDatePicker().getDateStringOrEmptyString() + " " + this.dateTimePicker.getTimePicker().getTimeStringOrEmptyString();
-//        System.out.println(this.dateTimePicker.getDatePicker());
-//            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-//            java.util.Date dt = sdf.parse(dateTime);
-//            System.out.println(dt);
-
     }//GEN-LAST:event_btnResetActionPerformed
 
     private void btnAddFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddFileActionPerformed
@@ -687,12 +682,12 @@ public class SendMailForm extends javax.swing.JFrame {
 
     private void btnBoldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBoldActionPerformed
         style = Font.BOLD;
-        editFont("b");
+        editFont();
     }//GEN-LAST:event_btnBoldActionPerformed
 
     private void btnItalicActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnItalicActionPerformed
         style = Font.ITALIC;
-        editFont("i");
+        editFont();
     }//GEN-LAST:event_btnItalicActionPerformed
 
     private void btnUnderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUnderActionPerformed
@@ -701,136 +696,51 @@ public class SendMailForm extends javax.swing.JFrame {
         } else {
             fontAttributes.clear();
         }
-        editFont("u");
+        editFont();
 
     }//GEN-LAST:event_btnUnderActionPerformed
 
     private void cbFontActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbFontActionPerformed
-
-        editFont("f");
+        editFont();
     }//GEN-LAST:event_cbFontActionPerformed
 
     private void cbSizeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbSizeActionPerformed
-
-        editFont("s");
+        editFont();
     }//GEN-LAST:event_cbSizeActionPerformed
 
-    //font
-    public void editFont(String req) {
-
-        int start = textContent.getSelectionStart();
-        int end = textContent.getSelectionEnd();
-        System.out.println(start);
-        System.out.println(end);
-
-        if (start == end) {
-            return;
-        }
-
-        StyledDocument doc = (StyledDocument) textContent.getDocument();
-        Element element = doc.getCharacterElement(start);
-        AttributeSet as = element.getAttributes();
-        //apply a new style based on previous 
-        MutableAttributeSet asNew = new SimpleAttributeSet(as.copyAttributes());
-
-//        font = fontName[(int) cbFont.getSelectedItem() - 1];
-//        String sizeString = cbSize.getSelectedItem().toString();
-//        size = Integer.parseInt(sizeString);
-//        Font myFont = new Font(font, style, size).deriveFont(fontAttributes);
-//        StyleContext sc = new StyleContext();
-//        Style s = sc.addStyle("yourStyle", null);
-//        StyleConstants.setFontFamily(asNew, myFont.getFamily());
-//        StyleConstants.setFontSize(asNew, size);
-        switch (req) {
-            case "b" -> {
-                
-                StyleConstants.setBold(asNew, !StyleConstants.isBold(asNew));
-            }
-            case "i" -> {
-
-                StyleConstants.setItalic(asNew, !StyleConstants.isItalic(asNew));
-            }
-            case "u" -> {
-
-                StyleConstants.setUnderline(asNew, !StyleConstants.isUnderline(asNew));
-            }
-            case "f" -> {
-                font = fontName[(int) cbFont.getSelectedItem() - 1];
-                Font myFont = new Font(font, style, size);
-                StyleConstants.setFontFamily(asNew, myFont.getFamily());
-            }
-            case "s" -> {
-                String sizeString = cbSize.getSelectedItem().toString();
-                size = Integer.parseInt(sizeString);
-                StyleConstants.setFontSize(asNew, size);
-            }
-        }
-
-//            StyleConstants.setForeground(style, Color.RED);
-        textContent.getStyledDocument().setCharacterAttributes(start, textContent.getSelectedText().length(), asNew, true);
-
+    public void editFont() {
+        font = fontName[(int) cbFont.getSelectedItem() - 1];
+        String sizeString = cbSize.getSelectedItem().toString();
+        size = Integer.parseInt(sizeString);
+        Font myFont = new Font(font, style, size).deriveFont(fontAttributes);
+        textContent.setFont(myFont);
     }
 
-//    public String convertStringToHTML(String content) {
-//        String htmlContent = "<font face=\"" + font + "\" size=\"" + cbSize.getSelectedItem().toString() + "\">" + textContent.getText() + "</font>";
-//
-//        if (style == Font.BOLD) {
-//            htmlContent = "<b>" + htmlContent + "</b>";
-//        } else if (style == Font.ITALIC) {
-//            htmlContent = "<i>" + htmlContent + "</i>";
+//    private void outputHTMLfile() {
+//        File f = new File("TestFile.txt");
+//        try {
+//            BufferedOutputStream br = new BufferedOutputStream(new FileOutputStream(f));
+//            HTMLEditorKit kit = new HTMLEditorKit();
+//            kit.write(br, (HTMLDocument) textContent.getDocument(), 0, ((HTMLDocument) textContent.getDocument()).getLength());
+//        } catch (Exception e) {
+//            e.printStackTrace();
 //        }
-//        if (!fontAttributes.isEmpty()) {
-//            htmlContent = "<u>" + htmlContent + "</u>";
+//    }
+//
+//    private String writeSelection() {
+//        StringWriter buf = new StringWriter();
+//        HTMLWriter writer = new HTMLWriter(buf,
+//                (HTMLDocument) textContent.getDocument(), textContent.getSelectionStart(), textContent.getSelectionEnd());
+//        try {
+//            writer.write();
+//        } catch (IOException | BadLocationException ex) {
+//            ex.printStackTrace();
 //        }
-//        htmlContent = "<html>" + htmlContent + "<html>";
-//        return htmlContent;
+//        return buf.toString();
 //    }
-    private void outputHTMLfile() {
-        File f = new File("TestFile.txt");
-        try {
-            BufferedOutputStream br = new BufferedOutputStream(new FileOutputStream(f));
-            HTMLEditorKit kit = new HTMLEditorKit();
-            kit.write(br, (HTMLDocument) textContent.getDocument(), 0, ((HTMLDocument) textContent.getDocument()).getLength());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
-    private String writeSelection() {
-        StringWriter buf = new StringWriter();
-        HTMLWriter writer = new HTMLWriter(buf,
-                (HTMLDocument) textContent.getDocument(), textContent.getSelectionStart(), textContent.getSelectionEnd());
-        try {
-            writer.write();
-        } catch (IOException | BadLocationException ex) {
-            ex.printStackTrace();
-        }
-        return buf.toString();
-    }
-
-//    public String convertToHTML(String content, boolean isB, boolean isI, boolean isU) {
-//        String htmlContent = "<font face=\"" + font + "\" size=\"" + cbSize.getSelectedItem().toString() + "\">" + content + "</font>";
-//
-//        htmlContent = isI ? "<i>" + htmlContent + "</i>" : htmlContent.substring(3, -4);
-//        htmlContent = isU ? "<u>" + htmlContent + "</u>" : htmlContent.substring(3, -4);
-//
-//        return htmlContent;
-//    }
-//
-//    public String addBoolean(String content, boolean isB) {
-//        return isB ? "<b>" + content + "</b>" : content.substring(3, -4);
-//    }
-//
-//    public String addItalic(String content, boolean isI) {
-//        return isI ? "<i>" + content + "</i>" : content.substring(3, -4);
-//    }
-//
-//    public String addUnderline(String content, boolean isU) {
-//        return isU ? "<u>" + content + "</u>" : content.substring(3, -4);
-//    }
     public String convertStringToHTML(String content) {
         String htmlContent = "<font face=\"" + font + "\" size=\"" + cbSize.getSelectedItem().toString() + "\">" + textContent.getText() + "</font>";
-
         if (style == Font.BOLD) {
             htmlContent = "<b>" + htmlContent + "</b>";
         } else if (style == Font.ITALIC) {
@@ -883,7 +793,6 @@ public class SendMailForm extends javax.swing.JFrame {
 
     public void checkRecipients(ObjectWrapper data) {
         if (data.getData() instanceof ArrayList) {
-
             ArrayList<Integer> idList = (ArrayList<Integer>) data.getData();
             if (!idList.isEmpty()) {
                 for (int i = 0; i < idList.size(); i++) {
@@ -893,16 +802,13 @@ public class SendMailForm extends javax.swing.JFrame {
                     if (!toList.contains(user)) {
                         toList.add(user);
                     }
-                }
-//                JOptionPane.showMessageDialog(this, "Users exist");
 
+                }
+                System.out.println("abc" + toList);
             } else {
-                toList.clear();
                 JOptionPane.showMessageDialog(this, "Your list had invalid user!!!");
                 txtMultiple.setText("");
-
             }
-            nameToList.clear();
         }
     }
 
@@ -916,13 +822,10 @@ public class SendMailForm extends javax.swing.JFrame {
     public String getFile(String path) {
 
         JFileChooser chooser = new JFileChooser(path);
-        chooser.setDialogTitle("Select Image File");
-        FileNameExtensionFilter fnef = new FileNameExtensionFilter("Image files", ImageIO.getReaderFileSuffixes());
-
-        chooser.setFileFilter(fnef);
-
+        chooser.setDialogTitle("Select File");
+//        FileNameExtensionFilter fnef = new FileNameExtensionFilter("Image files", ImageIO.getReaderFileSuffixes());
+//        chooser.setFileFilter(fnef);
         int imageChooser = chooser.showOpenDialog(null);
-
         if (imageChooser == JFileChooser.APPROVE_OPTION) {
             File f = chooser.getSelectedFile();
             String absolutePath = f.getAbsolutePath();
@@ -949,18 +852,17 @@ public class SendMailForm extends javax.swing.JFrame {
         cbFont.setModel(new javax.swing.DefaultComboBoxModel(array));
         ComboBoxRenderar renderar = new ComboBoxRenderar();
         cbFont.setRenderer(renderar);
+
 //        textContent.setContentType( "text/html" );
     }
 
     public void initReplies() {
         if (!replies.isEmpty()) {
-
             String repTo = "";
             for (Mail m : replies) {
-                repTo += m.getTitle() + "; ";
+                repTo += m.getTitle()+ "-" + m.getFormUser().getEmail() + ", ";
             }
             repTo = repTo.substring(0, repTo.length() - 2);
-
             txtReply.setText(repTo);
         }
 
@@ -1075,11 +977,11 @@ public class SendMailForm extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel7;
     private javax.swing.JPanel jPanel8;
     private javax.swing.JPanel jPanel9;
-    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JSeparator jSeparator2;
     private javax.swing.JRadioButton radioMulti;
     private javax.swing.JRadioButton radioTo;
-    private javax.swing.JTextPane textContent;
+    private javax.swing.JEditorPane textContent;
     private javax.swing.JTextField txtDomain;
     private javax.swing.JTextField txtDomainBcc;
     private javax.swing.JTextField txtMultiple;

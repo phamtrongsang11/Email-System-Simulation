@@ -255,7 +255,7 @@ public class ClientController {
                     } else {
 
                         object = decryptData((byte[]) ois.readObject());
-                        System.out.println(object + "\n");
+//                        System.out.println(object + "\n");
                     }
 
                     if (object instanceof ObjectWrapper data) {
