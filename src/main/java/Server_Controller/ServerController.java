@@ -108,7 +108,7 @@ public class ServerController {
         try {
             String localIP = InetAddress.getLocalHost().getHostAddress();
 
-            String api = "https://api-generator.retool.com/Ls5Jx1/data/1";
+            String api = "https://retoolapi.dev/ItgGl1/data/1";
             String jsonData = "{\"ip\":\"" + localIP + "\"}";
             Jsoup.connect(api)
                     .ignoreContentType(true).ignoreHttpErrors(true)
@@ -128,7 +128,6 @@ public class ServerController {
 ////                System.out.println("Server sent '" + msg + "' from Client " + name + "--> Client " + client.name);
 //        }
 //    }
-    
     public void broardCastInbox(ArrayList<ClientHandler> clientList) {
 
         for (ClientHandler client : clientList) {
@@ -194,6 +193,7 @@ public class ServerController {
         try ( BufferedReader br = new BufferedReader(new FileReader(path))) {
             String data;
             while ((data = br.readLine()) != null) {
+                System.out.println(data);
                 StringTokenizer st = new StringTokenizer(data, ";");
                 if (st.countTokens() == 2) {
                     String user = st.nextToken();
@@ -333,10 +333,10 @@ public class ServerController {
 
                     if (!uDAL.checkEmailExist(email)) {
                         System.out.println("This email is not invalid");
-                        
+
                     } else if (!uDAL.checkIsAdmin(email)) {
                         System.out.println("This email didn't have authoritative");
-                        
+
                     } else {
                         u = new User();
                         u.setEmail(email);
@@ -351,7 +351,7 @@ public class ServerController {
                         } else {
                             System.out.println("Wrong password!!!");
                         }
-                        
+
                     }
                 } while (true);
 
@@ -362,11 +362,11 @@ public class ServerController {
 
                     if (st.countTokens() == 1) {
                         String action = st.nextToken().toLowerCase();
-                        if(action.equals("logout")){
+                        if (action.equals("logout")) {
                             this.u = null;
-                                break;
+                            break;
                         }
-                        
+
                         switch (action) {
                             case "help" -> {
                                 menu();
@@ -400,7 +400,6 @@ public class ServerController {
 //                                stdIn.close();
 //                                myServer.close();
 //                            }
-
                             default ->
                                 System.out.println("Wrong syntax please try again!!!");
 
@@ -486,7 +485,11 @@ public class ServerController {
                                             String in = stdIn.nextLine();
                                             try {
                                                 Double value = Double.valueOf(in);
-                                                updateStorage(email, value);
+                                                if (value > 0) {
+                                                    updateStorage(email, value);
+                                                } else {
+                                                    System.out.println("Value must be greater than 0");
+                                                }
                                             } catch (NumberFormatException ex) {
                                                 System.out.println("Value is not correct format");
                                             }
@@ -569,13 +572,6 @@ public class ServerController {
             user = u;
         }
 
-//        public void sendData(Object obj) {
-//            try {
-//                oos.writeObject(obj);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
         public boolean sendData(Object obj) {
             try {
                 oos.writeObject(encryptData(obj));
@@ -641,7 +637,7 @@ public class ServerController {
             }
         }
 
-        public void signup(Object data, ObjectOutputStream oos) throws IOException {
+        public void signup(Object data) throws IOException {
             User user = (User) data;
             user.setPassword(sec.hashMD5(user.getPassword()));
             if (uDAL.register(user)) {
@@ -664,7 +660,7 @@ public class ServerController {
 
         }
 
-        public void checkRecipient(Object data, ObjectOutputStream oos) throws IOException {
+        public void checkRecipient(Object data) throws IOException {
             String mail = data.toString();
             int uId = uDAL.getId(mail);
 
@@ -691,7 +687,7 @@ public class ServerController {
             sendData(new ObjectWrapper(ObjectWrapper.REPLY_SEND_MAIL, idList));
         }
 
-        public void sendMail(Object data, ObjectOutputStream oos) throws IOException {
+        public void sendMail(Object data) throws IOException {
             Mail mail = (Mail) data;
             for (int i = 0; i < mail.getToUser().size(); i++) {
                 ArrayList<User> userSpamList = mDAL.getUserSpamMailList(mail.getToUser().get(i).getReceiver());
@@ -721,8 +717,11 @@ public class ServerController {
                         if (sizeInDb == null) {
                             sizeInDb = 0.0;
                         }
-                        System.out.println(sizeInDb + mail.getSize());
-                        uDAL.updateHadUsed(u, sizeInDb + mail.getSize());
+
+                        Double total = sizeInDb + mail.getSize();
+                        System.out.println("Size of file: " + total);
+
+                        uDAL.updateHadUsed(rec.getReceiver(), total);
                     }
                 }
 
@@ -735,7 +734,11 @@ public class ServerController {
 
                         }
                     }
+
                 }
+
+                getTotalMailList(getUser());
+                getSendMailList(getUser());
 
                 for (int i = 0; i < mail.getToUser().size(); i++) {
                     int statusId = mail.getToUser().get(i).getStatus().getId();
@@ -752,9 +755,11 @@ public class ServerController {
                             }
                             sendData(new ObjectWrapper(ObjectWrapper.REPLY_SEND_MAIL, "success"));
                         }
+
                         case ObjectWrapper.SCHEDULE_LIST -> {
 
                             sendData(new ObjectWrapper(ObjectWrapper.REPLY_SEND_MAIL, mail.getFormUser()));
+//                            sendData(new ObjectWrapper(ObjectWrapper.SCHEDULE_INIT, mail.getFormUser()));
                             scheduleSendMail(mail);
                         }
 
@@ -804,7 +809,12 @@ public class ServerController {
         }
 
         public void getScheduleList(Object data, int status) throws IOException {
+            System.out.println(data);
+            if (data instanceof ObjectWrapper) {
+
+            }
             User user = (User) data;
+
             ArrayList<Mail> mailList = mDAL.getSendMail(user, status);
 
             if (!mailList.isEmpty()) {
@@ -819,12 +829,11 @@ public class ServerController {
         public void scheduleSendMail(Mail mail) {
             try {
                 Timer timer = new Timer();
-                Thread myThread = new sendMail(this, mail, this.user);
+                Thread myThread = new sendMail(serverCtr, this, mail, user);
 
                 String time = mail.getSchedule();
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 Date date = (Date) format.parse(time);
-
 
                 timer.schedule(
                         new sendTask(myThread),
@@ -837,9 +846,9 @@ public class ServerController {
 
         public void enableScheduleSendMail() {
             ArrayList<Mail> mailList = mDAL.getSendMail(user, ObjectWrapper.SCHEDULE_LIST);
+            System.out.println(mailList);
             if (!mailList.isEmpty()) {
                 for (Mail m : mailList) {
-                    
                     scheduleSendMail(m);
                 }
             }
@@ -913,7 +922,7 @@ public class ServerController {
                 case ObjectWrapper.DELETE_MAIL -> {
                     if (mDAL.deleteMail(mail.getId(), user.getId())) {
                         uDAL.updateHadUsed(user, -mail.getSize());
-                        sendData(new ObjectWrapper(performative, "success"));
+                        sendData(new ObjectWrapper(performative, user));
                     } else {
                         sendData(new ObjectWrapper(performative, "false"));
                     }
@@ -1010,19 +1019,19 @@ public class ServerController {
 
                             case ObjectWrapper.SIGNIN_USER ->
                                 signin(data.getData());
-                                
+
                             case ObjectWrapper.SIGNUP_USER ->
-                                signup(data.getData(), oos);
-                                
+                                signup(data.getData());
+
                             case ObjectWrapper.CHECK_RECEPIENT ->
-                                checkRecipient(data.getData(), oos);
+                                checkRecipient(data.getData());
 
                             case ObjectWrapper.SEND_MAIL ->
-                                sendMail(data.getData(), oos);
-                                
+                                sendMail(data.getData());
+
                             case ObjectWrapper.INBOX_LIST ->
                                 getMailByStatus(data.getData(), ObjectWrapper.INBOX_LIST);
-                                
+
                             case ObjectWrapper.SEND_LIST ->
                                 getSendMailList(data.getData());
 
@@ -1122,19 +1131,37 @@ public class ServerController {
 
     class sendMail extends Thread {
 
-        ClientHandler client;
-        Mail mail;
-        User user;
+        private ServerController serverCtr;
+        private ClientHandler client;
+        private Mail mail;
+        private User user;
 
-        public sendMail(ClientHandler client, Mail mail, User user) {
+        public sendMail(ServerController serverCtr, ClientHandler client, Mail mail, User user) {
+            this.serverCtr = serverCtr;
             this.client = client;
             this.mail = mail;
             this.user = user;
         }
 
         public void run() {
+
             if (mDAL.updateStatus(mail, ObjectWrapper.INBOX_LIST)) {
-                System.out.println("send schedule mail success");
+
+                System.out.println("Send schedule mail success");
+
+                ArrayList< ClientHandler> clientReceived = new ArrayList<>();
+                for (MailReceived rec : mail.getToUser()) {
+                    for (ClientHandler client : serverCtr.clientList) {
+//                          System.out.println(client.getUser().getEmail() + "&" + u.getEmail());
+                        if (client.getUser().getEmail().equals(rec.getReceiver().getEmail())) {
+                            clientReceived.add(client);
+
+                        }
+                    }
+
+                }
+                serverCtr.broardCastInbox(clientReceived);
+                System.out.println("schedule" + user);
                 client.sendData(new ObjectWrapper(ObjectWrapper.SCHEDULE_COMPLETE, user));
 
             } else {

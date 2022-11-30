@@ -50,7 +50,7 @@ public class ObjectWrapper implements Serializable {
     public static final int SCHEDULE_COMPLETE = 36;
     public static final int CHECK_STORAGE = 37;
     public static final int IS_FULL= 38;
-    
+    public static final int SCHEDULE_INIT= 39;
     private int performative;
     private Object data;
 

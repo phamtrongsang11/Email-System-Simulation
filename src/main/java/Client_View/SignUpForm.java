@@ -302,14 +302,14 @@ public class SignUpForm extends javax.swing.JFrame {
     }//GEN-LAST:event_formWindowClosing
 
     private void txtFnameFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtFnameFocusLost
-        if (!txtFname.getText().isEmpty() && !Validation.firstName(txtFname.getText())) {
+        if (!txtFname.getText().isEmpty() && !Validation.validationName(txtFname.getText())) {
             JOptionPane.showMessageDialog(this, "This first name is invalid");
             txtFname.setText("");
         }
     }//GEN-LAST:event_txtFnameFocusLost
 
     private void txtLnameFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtLnameFocusLost
-        if (!txtLname.getText().isEmpty() && !Validation.firstName(txtLname.getText())) {
+        if (!txtLname.getText().isEmpty() && !Validation.validationName(txtLname.getText())) {
             JOptionPane.showMessageDialog(this, "This last name is invalid");
             txtLname.setText("");
         }

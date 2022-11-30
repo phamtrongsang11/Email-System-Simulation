@@ -57,7 +57,7 @@ public class ClientController {
     private String keyAES;
 
     public ClientController(MainView view) {
-        
+
         getIpServer();
         openConnection();
         keyAES = sec.createRandomString(64);
@@ -69,6 +69,7 @@ public class ClientController {
 
     public boolean openConnection() {
         try {
+            System.out.println(ipServer);
             mySocket = new Socket(ipServer, port);
             oos = new ObjectOutputStream(mySocket.getOutputStream());
             ois = new ObjectInputStream(mySocket.getInputStream());
@@ -80,7 +81,6 @@ public class ClientController {
             executor = Executors.newFixedThreadPool(numThread);
             executor.execute(myListening);
         } catch (IOException ex) {
-            view.showMessage("Error when connecting to the server!");
             return false;
         }
         return true;
@@ -102,7 +102,7 @@ public class ClientController {
 
     public void getIpServer() {
         try {
-            String api = "https://api-generator.retool.com/Ls5Jx1/data/1";
+            String api = "https://retoolapi.dev/ItgGl1/data/1";
             Document doc = Jsoup.connect(api)
                     .ignoreContentType(true).ignoreHttpErrors(true)
                     .header("Content-Type", "application/json")
@@ -270,18 +270,19 @@ public class ClientController {
                             }
 
                             case ObjectWrapper.BROARDCAST_INBOX -> {
-                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, (User) data.getData()));                
-                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.INBOX_LIST, (User) data.getData()));                    
+
+                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, (User) data.getData()));
+                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.INBOX_LIST, (User) data.getData()));
                             }
 
                             case ObjectWrapper.BROARDCAST_SPAM -> {
-                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.SPAM_LIST, (User) data.getData()));
                                 clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, (User) data.getData()));
+                                 clientCtr.sendData(new ObjectWrapper(ObjectWrapper.SPAM_LIST, (User) data.getData()));
                             }
 
                             case ObjectWrapper.UPDATE_TO_READ_LIST -> {
-                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, data.getData()));                
-                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.INBOX_LIST, (User) data.getData()));                    
+                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, data.getData()));
+                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.INBOX_LIST, (User) data.getData()));
                             }
 
                             case ObjectWrapper.UPDATE_TO_DELETE_LIST -> {
@@ -290,8 +291,8 @@ public class ClientController {
                             }
 
                             case ObjectWrapper.UPDATE_TO_SPAM_LIST -> {
-                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, data.getData()));                                
-                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.READ_LIST, (User) data.getData()));  
+                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, data.getData()));
+                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.READ_LIST, (User) data.getData()));
                             }
 
                             case ObjectWrapper.GET_TOTAL_MAIL_LIST ->
@@ -308,12 +309,12 @@ public class ClientController {
                             }
 
                             case ObjectWrapper.DELETE_SCHEDULE -> {
-                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, data.getData()));  
+                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, data.getData()));
                                 view.deleteSchedule(data);
                             }
 
                             case ObjectWrapper.DELETE_MAIL -> {
-                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, data.getData()));  
+                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, data.getData()));
                                 view.deleteMail(data);
                             }
 
@@ -324,14 +325,20 @@ public class ClientController {
                                 view.saveFile();
 
                             case ObjectWrapper.SCHEDULE_COMPLETE -> {
+                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.SCHEDULE_LIST, data.getData()));
+                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, data.getData()));
                                 view.schedule(data);
                             }
-                            
+
+//                            case ObjectWrapper.SCHEDULE_INIT -> {
+//                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.SCHEDULE_LIST, data));
+//                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, data));
+//                            }
                             case ObjectWrapper.CHECK_STORAGE -> {
                                 view.checkStorage(data);
                             }
-                            
-                            case ObjectWrapper.IS_FULL ->{
+
+                            case ObjectWrapper.IS_FULL -> {
                                 view.IsFull(data);
                             }
 
@@ -366,9 +373,9 @@ public class ClientController {
                                                 sendMail.checkRecipients(data);
 
                                             } else if (data.getData() instanceof User user) {
-                                                sendMail.receivedData(data);
-                                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.SCHEDULE_LIST, user));
+                                                sendMail.receivedData(data);   
                                                 clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, user));
+                                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.SCHEDULE_LIST, user));
                                             } else {
 
                                                 sendMail.receivedData(data);

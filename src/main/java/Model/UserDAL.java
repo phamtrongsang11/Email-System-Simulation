@@ -249,7 +249,7 @@ public class UserDAL extends MyDatabaseManager {
         try {
             String query = "UPDATE user SET IsLocked = ? WHERE Email = ?";
             PreparedStatement p = this.getConnection().prepareStatement(query);
-            p.setInt(1, 1);
+            p.setInt(1, lock);
             p.setString(2, email);
             
             if (p.executeUpdate() != 0) {

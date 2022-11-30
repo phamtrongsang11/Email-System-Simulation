@@ -20,17 +20,12 @@ public class Validation {
     public static boolean validationMail(String email) {
         String regexPattern = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@"
                 + "[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
-//        Pattern pattern = Pattern.compile(regexPattern);
-//        Matcher m = pattern.matcher(email);
-//        return m.matches();
         return email.matches(regexPattern);
     }
 
-    public static boolean firstName(String firstName) {
-        return firstName.matches("[A-Z][a-z]*");
+    public static boolean validationName(String firstName) {
+        String regexPattern = "^[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$";
+        return firstName.matches(regexPattern);
     }
 
-    public static boolean lastName(String lastName) {
-        return lastName.matches("[A-Z]+([ '-][a-zA-Z]+)*");
-    }
 }

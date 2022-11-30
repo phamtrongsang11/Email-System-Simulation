@@ -1,0 +1,86 @@
+//    public String convertToHTML(String content, boolean isB, boolean isI, boolean isU) {
+//        String htmlContent = "<font face=\"" + font + "\" size=\"" + cbSize.getSelectedItem().toString() + "\">" + content + "</font>";
+//
+//        htmlContent = isI ? "<i>" + htmlContent + "</i>" : htmlContent.substring(3, -4);
+//        htmlContent = isU ? "<u>" + htmlContent + "</u>" : htmlContent.substring(3, -4);
+//
+//        return htmlContent;
+//    }
+//
+//    public String addBoolean(String content, boolean isB) {
+//        return isB ? "<b>" + content + "</b>" : content.substring(3, -4);
+//    }
+//
+//    public String addItalic(String content, boolean isI) {
+//        return isI ? "<i>" + content + "</i>" : content.substring(3, -4);
+//    }
+//
+//    public String addUnderline(String content, boolean isU) {
+//        return isU ? "<u>" + content + "</u>" : content.substring(3, -4);
+//    }
+
+
+//    public String convertStringToHTML(String content) {
+//        String htmlContent = "<font face=\"" + font + "\" size=\"" + cbSize.getSelectedItem().toString() + "\">" + textContent.getText() + "</font>";
+//
+//        if (style == Font.BOLD) {
+//            htmlContent = "<b>" + htmlContent + "</b>";
+//        } else if (style == Font.ITALIC) {
+//            htmlContent = "<i>" + htmlContent + "</i>";
+//        }
+//        if (!fontAttributes.isEmpty()) {
+//            htmlContent = "<u>" + htmlContent + "</u>";
+//        }
+//        htmlContent = "<html>" + htmlContent + "<html>";
+//        return htmlContent;
+//    }
+
+int start = textContent.getSelectionStart();
+        int end = textContent.getSelectionEnd();
+       
+        if (start == end) {
+            return;
+        }
+
+        StyledDocument doc = (StyledDocument) textContent.getDocument();
+        Element element = doc.getCharacterElement(start);
+        AttributeSet as = element.getAttributes();
+       
+        MutableAttributeSet asNew = new SimpleAttributeSet(as.copyAttributes());
+
+//        font = fontName[(int) cbFont.getSelectedItem() - 1];
+//        String sizeString = cbSize.getSelectedItem().toString();
+//        size = Integer.parseInt(sizeString);
+//        Font myFont = new Font(font, style, size).deriveFont(fontAttributes);
+//        StyleContext sc = new StyleContext();
+//        Style s = sc.addStyle("yourStyle", null);
+//        StyleConstants.setFontFamily(asNew, myFont.getFamily());
+//        StyleConstants.setFontSize(asNew, size);
+
+        switch (req) {
+            case "b" -> {
+                
+                StyleConstants.setBold(asNew, !StyleConstants.isBold(asNew));
+            }
+            case "i" -> {
+
+                StyleConstants.setItalic(asNew, !StyleConstants.isItalic(asNew));
+            }
+            case "u" -> {
+
+                StyleConstants.setUnderline(asNew, !StyleConstants.isUnderline(asNew));
+            }
+            case "f" -> {
+                font = fontName[(int) cbFont.getSelectedItem() - 1];
+                Font myFont = new Font(font, style, size);
+                StyleConstants.setFontFamily(asNew, myFont.getFamily());
+            }
+            case "s" -> {
+                String sizeString = cbSize.getSelectedItem().toString();
+                size = Integer.parseInt(sizeString);
+                StyleConstants.setFontSize(asNew, size);
+            }
+        }
+
+//            StyleConstants.setForeground(style, Color.RED);
+        textContent.getStyledDocument().setCharacterAttributes(start, end, asNew, true);

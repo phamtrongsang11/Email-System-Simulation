@@ -9,45 +9,22 @@ import Common.Validation;
 import Model.Mail;
 import Model.MailReceived;
 import Model.ObjectWrapper;
-import Model.Status;
 import Model.User;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.awt.font.TextAttribute;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.StringWriter;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.imageio.ImageIO;
-import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.ListCellRenderer;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.text.AttributeSet;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Element;
-import javax.swing.text.MutableAttributeSet;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.Style;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyleContext;
-import javax.swing.text.StyledDocument;
-import javax.swing.text.html.HTMLDocument;
-import javax.swing.text.html.HTMLEditorKit;
-import javax.swing.text.html.HTMLWriter;
 
 /**
  *
@@ -569,9 +546,9 @@ public class SendMailForm extends javax.swing.JFrame {
             if (!dateTimePicker.getTimePicker().toString().isBlank()) {
                 String dateTime = this.dateTimePicker.getDatePicker().getDateStringOrEmptyString() + " " + this.dateTimePicker.getTimePicker().getTimeStringOrEmptyString();
                 mail.setSchedule(dateTime);
-                
+
                 for (MailReceived rec : mail.getToUser()) {
-                   rec.getStatus().setId(ObjectWrapper.SCHEDULE_LIST);
+                    rec.getStatus().setId(ObjectWrapper.SCHEDULE_LIST);
                 }
             }
 
@@ -604,6 +581,8 @@ public class SendMailForm extends javax.swing.JFrame {
 
     private void txtToFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtToFocusLost
         if (!txtTo.getText().isEmpty()) {
+            nameToList.clear();
+            toList.clear();
 
             String to = txtTo.getText() + txtDomain.getText();
 
@@ -636,7 +615,7 @@ public class SendMailForm extends javax.swing.JFrame {
                 }
                 nameToList.add(email);
             }
-            if(nameToList.contains(view.getUser().getEmail())){
+            if (nameToList.contains(view.getUser().getEmail())) {
                 JOptionPane.showMessageDialog(this, "You can not send to yourself");
                 txtMultiple.setText("");
                 return;
@@ -671,8 +650,11 @@ public class SendMailForm extends javax.swing.JFrame {
 
     private void btnAddFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddFileActionPerformed
         String fileName = getFile("");
-        txtPath.setText(fileName);
-        System.out.println(fileName);
+        if (fileName != null) {
+            txtPath.setText(fileName);
+        } else {
+            txtPath.setText("");
+        }
     }//GEN-LAST:event_btnAddFileActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
@@ -738,7 +720,6 @@ public class SendMailForm extends javax.swing.JFrame {
 //        }
 //        return buf.toString();
 //    }
-
     public String convertStringToHTML(String content) {
         String htmlContent = "<font face=\"" + font + "\" size=\"" + cbSize.getSelectedItem().toString() + "\">" + textContent.getText() + "</font>";
         if (style == Font.BOLD) {
@@ -820,19 +801,22 @@ public class SendMailForm extends javax.swing.JFrame {
     }
 
     public String getFile(String path) {
-
         JFileChooser chooser = new JFileChooser(path);
         chooser.setDialogTitle("Select File");
-//        FileNameExtensionFilter fnef = new FileNameExtensionFilter("Image files", ImageIO.getReaderFileSuffixes());
-//        chooser.setFileFilter(fnef);
-        int imageChooser = chooser.showOpenDialog(null);
-        if (imageChooser == JFileChooser.APPROVE_OPTION) {
+        
+        int ch = chooser.showOpenDialog(null);
+
+        if (ch == JFileChooser.APPROVE_OPTION) {
             File f = chooser.getSelectedFile();
             String absolutePath = f.getAbsolutePath();
-//            return absolutePath.substring(absolutePath.lastIndexOf(File.separator) + 1);
-            return absolutePath;
-        }
+            
+//            File file = new File(absolutePath);
+            if (f.exists() && !f.isDirectory()) {
+                return absolutePath;
+            }
 
+        }
+        JOptionPane.showMessageDialog(this, "File not exist!!!");
         return null;
     }
 
@@ -860,15 +844,11 @@ public class SendMailForm extends javax.swing.JFrame {
         if (!replies.isEmpty()) {
             String repTo = "";
             for (Mail m : replies) {
-                repTo += m.getTitle()+ "-" + m.getFormUser().getEmail() + ", ";
+                repTo += m.getTitle() + "-" + m.getFormUser().getEmail() + ", ";
             }
             repTo = repTo.substring(0, repTo.length() - 2);
             txtReply.setText(repTo);
         }
-
-    }
-
-    public void getFileName(ObjectWrapper data) {
 
     }
 

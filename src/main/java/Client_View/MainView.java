@@ -845,6 +845,7 @@ public class MainView extends javax.swing.JFrame {
             lbFrom.setText(tableMail.getModel().getValueAt(i, 1).toString());
             lbTime.setText(tableMail.getModel().getValueAt(i, 3).toString());
             lbSubject.setText(tableMail.getModel().getValueAt(i, 2).toString());
+            System.out.println(mailList.get(i));
             lbFile.setText(mailList.get(i).getFile());
 
 //            System.out.println(mailList.get(i).getFile());
@@ -1245,12 +1246,12 @@ public class MainView extends javax.swing.JFrame {
 
             mailList = (ArrayList<Mail>) data.getData();
 
-            lbnInbox.setText(total.get(0).toString());
-            lbnRead.setText(total.get(1).toString());
-            lbnSpam.setText(total.get(2).toString());
-            lbnDelete.setText(total.get(3).toString());
-            lbnSchedule.setText(total.get(4).toString());
-            lbnSend.setText(total.get(5).toString());
+            lbnInbox.setText("(" + total.get(0).toString() + ")");
+            lbnRead.setText("(" + total.get(1).toString() + ")");
+            lbnSpam.setText("(" + total.get(2).toString() + ")");
+            lbnDelete.setText("(" + total.get(3).toString() + ")");
+            lbnSchedule.setText("(" + total.get(4).toString() + ")");
+            lbnSend.setText("(" + total.get(5).toString() + ")");
 
         } else {
             JOptionPane.showMessageDialog(this, "You don't have any mail");
@@ -1287,12 +1288,11 @@ public class MainView extends javax.swing.JFrame {
     }
 
     public void deleteMail(ObjectWrapper data) {
-        if (!data.getData().equals("false")) {
+        if (data.getData() instanceof String && !data.getData().equals("false")) {
+            JOptionPane.showMessageDialog(this, "Delete mail false");
+        } else {
             myController.sendData(new ObjectWrapper(ObjectWrapper.DELETE_LIST, user));
             JOptionPane.showMessageDialog(this, "Delete mail success");
-
-        } else {
-            JOptionPane.showMessageDialog(this, "Delete mail false");
         }
     }
 

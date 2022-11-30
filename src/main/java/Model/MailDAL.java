@@ -171,7 +171,7 @@ public class MailDAL extends MyDatabaseManager {
                     User u = new User();
                     u.setId(rs.getInt("UserID"));
                     u.setEmail(rs.getString("Email"));
-                    
+
                     Mail m = new Mail();
                     m.setId(rs.getInt("RepID"));
                     m.setTitle(rs.getString("Title"));
@@ -231,7 +231,6 @@ public class MailDAL extends MyDatabaseManager {
             ResultSet rs = this.doReadQuery(query);
 
 //            System.out.println(query);
-
             if (rs != null && rs.next()) {
                 total = rs.getInt("Total");
             }
@@ -268,17 +267,24 @@ public class MailDAL extends MyDatabaseManager {
         boolean result = false;
         try {
             String query = "UPDATE mail_received SET StatusID = ? WHERE ReceiverID = ? AND MailID = ?";
-            PreparedStatement p = this.getConnection().prepareStatement(query);
-            p.setInt(1, status);
-            p.setInt(2, mail.getToUser().get(0).getReceiver().getId());
-            p.setInt(3, mail.getId());
-
-            if (p.executeUpdate() != 0) {
+            
+            for (MailReceived rec : mail.getToUser()) {
+                PreparedStatement p = this.getConnection().prepareStatement(query);
+                p.setInt(1, status);
+//            p.setInt(2, mail.getToUser().get(0).getReceiver().getId());
+                
+                p.setInt(2, rec.getReceiver().getId());
+                p.setInt(3, mail.getId());
+                
+                if (p.executeUpdate() != 0) {
                 result = true;
             }
-            
+
 //            System.out.println(mail);
-//            System.out.println(p);
+            System.out.println(p);
+            }
+
+            
 
         } catch (Exception e) {
             e.getMessage();
@@ -363,7 +369,7 @@ public class MailDAL extends MyDatabaseManager {
                 query = "SELECT *"
                         + " FROM mail, mail_received"
                         + " WHERE mail.MailID = mail_received.MailID AND mail.FromID = " + user.getId()
-                        + " AND  mail_received.StatusID= " + status
+                        + " AND  mail_received.StatusID = " + status
                         + " ORDER BY mail.Time DESC";
 
             }
