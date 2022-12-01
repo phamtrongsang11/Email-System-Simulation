@@ -840,6 +840,7 @@ public class MainView extends javax.swing.JFrame {
     private void tableMailMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tableMailMouseClicked
         int i = tableMail.getSelectedRow();
         if (i >= 0) {
+            textContent.setContentType("text/html");
             //            int id = Integer.parseInt(tableMail.getModel().getValueAt(i, 1).toString());
             lbTitleFrom.setText(tableMail.getModel().getColumnName(1) + ":");
             lbFrom.setText(tableMail.getModel().getValueAt(i, 1).toString());
@@ -847,10 +848,6 @@ public class MainView extends javax.swing.JFrame {
             lbSubject.setText(tableMail.getModel().getValueAt(i, 2).toString());
            
             lbFile.setText(mailList.get(i).getFile());
-
-//            System.out.println(mailList.get(i).getFile());
-//            String content = tableMail.getModel().getValueAt(i, 3).toString();
-            textContent.setContentType("text/html");
             textContent.setText(mailList.get(i).getContent());
 
             if (mailList.get(i).getStatus() != null && mailList.get(i).getStatus().getId() == ObjectWrapper.INBOX_LIST) {
@@ -1188,8 +1185,6 @@ public class MainView extends javax.swing.JFrame {
                     replies = replies.substring(0, replies.length() - 2);
                 }
             }
-
-            System.out.println(mailList.get(i).getSize().toString());
             row.add(replies);
             model.addRow(row);
 
@@ -1331,7 +1326,6 @@ public class MainView extends javax.swing.JFrame {
     public void setUser(User user) {
         this.user = user;
         lbUser.setText(user.getFirstName() + " " + user.getLastName());
-        //System.out.println(user);
     }
 
     public void showMessage(String s) {

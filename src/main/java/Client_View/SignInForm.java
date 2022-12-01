@@ -283,7 +283,6 @@ public class SignInForm extends javax.swing.JFrame {
             }
 
         }
-        System.out.println(activeFunc);
     }
 
     public void customInit() {

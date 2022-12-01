@@ -26,6 +26,7 @@ public class MailDAL extends MyDatabaseManager {
     }
 
     public int getLastID() throws SQLException {
+
         int id = 0;
         String query = "SELECT MailID FROM mail ORDER BY MailID DESC LIMIT 1";
         ResultSet rs = this.doReadQuery(query);
@@ -72,7 +73,7 @@ public class MailDAL extends MyDatabaseManager {
                 int mailId = this.getLastID();
                 String qr = "INSERT INTO mail_received VALUES (?, ?, ?)";
                 for (MailReceived rec : mail.getToUser()) {
-//                    System.out.println(user);
+
                     PreparedStatement p = this.getConnection().prepareStatement(qr);
                     p.setInt(1, mailId);
                     p.setInt(2, rec.getReceiver().getId());
@@ -142,7 +143,7 @@ public class MailDAL extends MyDatabaseManager {
 
                     mailList.add(mail);
                 }
-                System.out.println("success");
+
             }
 
         } catch (Exception ex) {
@@ -260,11 +261,8 @@ public class MailDAL extends MyDatabaseManager {
 //            query = "SELECT COUNT(mail.MailID) AS Total FROM mail, mail_received WHERE mail.MailID = mail_received.MailID AND FromID = " + user.getId() + " AND StatusID = " + status;
                 ResultSet rs = this.doReadQuery(query);
 
-                System.out.println(query);
-
                 if (rs != null && rs.next()) {
                     total = rs.getInt("COUNT(*)");
-                    System.out.println(total);
                 }
             }
 
@@ -292,7 +290,7 @@ public class MailDAL extends MyDatabaseManager {
                 }
 
 //            System.out.println(mail);
-                System.out.println(p);
+//                System.out.println(p);
             }
 
         } catch (Exception e) {

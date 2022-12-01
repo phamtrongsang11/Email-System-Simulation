@@ -34,6 +34,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -279,7 +280,7 @@ public class ServerController {
         }
     }
 
-    public void displayAddUser() {
+    public void displayUser() {
         ArrayList<User> uList = uDAL.getAllUser();
         System.out.println("Id\tEmail\t\t\tHadUsed\t\tStorage");
         for (User u : uList) {
@@ -380,7 +381,7 @@ public class ServerController {
                             }
 
                             case "sendall" -> {
-                                System.out.println("Please enter tile you want to send: ");
+                                System.out.println("Please enter title you want to send: ");
                                 String title = stdIn.nextLine();
                                 System.out.println("Please enter content you want to send: ");
                                 String content = stdIn.nextLine();
@@ -390,7 +391,7 @@ public class ServerController {
                                 SendMessageToAllUser(mail);
                             }
                             case "list" -> {
-                                displayAddUser();
+                                displayUser();
                             }
 
                             case "listlocked" -> {
@@ -634,8 +635,6 @@ public class ServerController {
                     sendData(new ObjectWrapper(ObjectWrapper.REPLY_SIGNIN_USER, oUser));
                     setUser(user);
 
-                    enableScheduleSendMail();
-
                 } else {
                     sendData(new ObjectWrapper(ObjectWrapper.REPLY_SIGNIN_USER, "false"));
                 }
@@ -648,7 +647,7 @@ public class ServerController {
             User user = (User) data;
             user.setPassword(sec.hashMD5(user.getPassword()));
             if (uDAL.register(user)) {
-                
+
                 StringTokenizer st = new StringTokenizer(user.getEmail(), "@");
                 String name = st.nextToken();
                 new File("users" + "/" + name).mkdirs();
@@ -735,13 +734,13 @@ public class ServerController {
                 ArrayList< ClientHandler> clientReceived = new ArrayList<>();
                 for (MailReceived rec : mail.getToUser()) {
                     for (ClientHandler client : clientList) {
+                        System.out.println(client);
 //                          System.out.println(client.getUser().getEmail() + "&" + u.getEmail());
                         if (client.getUser().getEmail().equals(rec.getReceiver().getEmail())) {
                             clientReceived.add(client);
 
                         }
                     }
-
                 }
 
                 getTotalMailList(getUser());
@@ -764,10 +763,16 @@ public class ServerController {
                         }
 
                         case ObjectWrapper.SCHEDULE_LIST -> {
+                            try {
+                                mail.setId(mDAL.getLastID());
+                                sendData(new ObjectWrapper(ObjectWrapper.REPLY_SEND_MAIL, mail.getFormUser()));
+                                System.out.println(mail);
+                                scheduleSendMail(mail);
+                                
+                            } catch (SQLException ex) {
+                                System.err.println(ex);
+                            }
 
-                            sendData(new ObjectWrapper(ObjectWrapper.REPLY_SEND_MAIL, mail.getFormUser()));
-//                            sendData(new ObjectWrapper(ObjectWrapper.SCHEDULE_INIT, mail.getFormUser()));
-                            scheduleSendMail(mail);
                         }
 
                     }
@@ -816,7 +821,7 @@ public class ServerController {
         }
 
         public void getScheduleList(Object data, int status) throws IOException {
-           
+
             if (data instanceof ObjectWrapper) {
 
             }
@@ -851,16 +856,15 @@ public class ServerController {
             }
         }
 
-        public void enableScheduleSendMail() {
-            ArrayList<Mail> mailList = mDAL.getSendMail(user, ObjectWrapper.SCHEDULE_LIST);
-          
-            if (!mailList.isEmpty()) {
-                for (Mail m : mailList) {
-                    scheduleSendMail(m);
-                }
-            }
-        }
-
+//        public void enableScheduleSendMail() {
+//            ArrayList<Mail> mailList = mDAL.getSendMail(user, ObjectWrapper.SCHEDULE_LIST);
+//          
+//            if (!mailList.isEmpty()) {
+//                for (Mail m : mailList) {
+//                    scheduleSendMail(m);
+//                }
+//            }
+//        }
         public void updateStatus(Object data, int status, int performative) throws IOException {
             Mail mail = (Mail) data;
             if (mDAL.updateStatus(mail, status)) {
@@ -937,19 +941,6 @@ public class ServerController {
             }
         }
 
-        public byte[] longToBytes(long x) {
-            ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-            buffer.putLong(x);
-            return buffer.array();
-        }
-
-        public long bytesToLong(byte[] bytes) {
-            ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-            buffer.put(bytes);
-            buffer.flip();
-            return buffer.getLong();
-        }
-
         public void sendPublicKey() throws IOException {
             byte[] key = sec.readPublicKeyRSA();
             oos.writeObject(new ObjectWrapper(ObjectWrapper.PUBLIC_KEY, key));
@@ -1010,6 +1001,7 @@ public class ServerController {
                 while (true && !shutdown) {
                     Object object;
                     if (flag) {
+                        // read key aes client send
                         object = ois.readObject();
                         flag = false;
 
@@ -1151,7 +1143,6 @@ public class ServerController {
         }
 
         public void run() {
-
             if (mDAL.updateStatus(mail, ObjectWrapper.INBOX_LIST)) {
 
                 System.out.println("Send schedule mail success");
@@ -1168,11 +1159,11 @@ public class ServerController {
 
                 }
                 serverCtr.broardCastInbox(clientReceived);
-              
+
                 client.sendData(new ObjectWrapper(ObjectWrapper.SCHEDULE_COMPLETE, user));
 
             } else {
-                client.sendData(new ObjectWrapper(ObjectWrapper.SCHEDULE_COMPLETE, "false"));
+                client.sendData(new ObjectWrapper(ObjectWrapper.SCHEDULE_COMPLETE, "fail"));
             }
         }
     }

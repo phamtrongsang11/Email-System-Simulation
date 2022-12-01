@@ -69,7 +69,7 @@ public class ClientController {
 
     public boolean openConnection() {
         try {
-            System.out.println(ipServer);
+
             mySocket = new Socket(ipServer, port);
             oos = new ObjectOutputStream(mySocket.getOutputStream());
             ois = new ObjectInputStream(mySocket.getInputStream());
@@ -277,7 +277,7 @@ public class ClientController {
 
                             case ObjectWrapper.BROARDCAST_SPAM -> {
                                 clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, (User) data.getData()));
-                                 clientCtr.sendData(new ObjectWrapper(ObjectWrapper.SPAM_LIST, (User) data.getData()));
+                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.SPAM_LIST, (User) data.getData()));
                             }
 
                             case ObjectWrapper.UPDATE_TO_READ_LIST -> {
@@ -325,8 +325,11 @@ public class ClientController {
                                 view.saveFile();
 
                             case ObjectWrapper.SCHEDULE_COMPLETE -> {
-                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.SCHEDULE_LIST, data.getData()));
-                                clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, data.getData()));
+                                if (data.getData() instanceof User) {
+                                    clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, data.getData()));
+                                    clientCtr.sendData(new ObjectWrapper(ObjectWrapper.SCHEDULE_LIST, data.getData()));
+                                }
+
                                 view.schedule(data);
                             }
 
@@ -373,7 +376,7 @@ public class ClientController {
                                                 sendMail.checkRecipients(data);
 
                                             } else if (data.getData() instanceof User user) {
-                                                sendMail.receivedData(data);   
+                                                sendMail.receivedData(data);
                                                 clientCtr.sendData(new ObjectWrapper(ObjectWrapper.GET_TOTAL_MAIL_LIST, user));
                                                 clientCtr.sendData(new ObjectWrapper(ObjectWrapper.SCHEDULE_LIST, user));
                                             } else {
