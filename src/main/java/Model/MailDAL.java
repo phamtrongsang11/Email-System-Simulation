@@ -389,8 +389,8 @@ public class MailDAL extends MyDatabaseManager {
                     mail.setFile(rs.getString("File"));
                     mail.setIsCC(rs.getBoolean("IsCC"));
                     mail.setSchedule(rs.getString("Schedule"));
+                    mail.setStatus(new Status(rs.getInt("StatusID")));
                     mailList.add(mail);
-
                 }
             }
             mailList = getToUserFromSendMail(mailList);

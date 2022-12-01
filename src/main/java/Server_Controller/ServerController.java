@@ -766,7 +766,7 @@ public class ServerController {
                             try {
                                 mail.setId(mDAL.getLastID());
                                 sendData(new ObjectWrapper(ObjectWrapper.REPLY_SEND_MAIL, mail.getFormUser()));
-                                System.out.println(mail);
+                                
                                 scheduleSendMail(mail);
                                 
                             } catch (SQLException ex) {
@@ -925,7 +925,7 @@ public class ServerController {
             switch (performative) {
                 case ObjectWrapper.DELETE_SCHEDULE -> {
                     if (mDAL.deleteSchedule(mail.getId())) {
-                        sendData(new ObjectWrapper(performative, "success"));
+                        sendData(new ObjectWrapper(performative, user));
                     } else {
                         sendData(new ObjectWrapper(performative, "false"));
                     }
