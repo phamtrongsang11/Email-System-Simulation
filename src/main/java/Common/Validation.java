@@ -4,9 +4,6 @@
  */
 package Common;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
  *
  * @author phamt
@@ -26,6 +23,11 @@ public class Validation {
     public static boolean validationName(String firstName) {
         String regexPattern = "^[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$";
         return firstName.matches(regexPattern);
+    }
+    
+    public static boolean validationPassword(String password) {
+        String regexPattern = "(?i)^(?=.*[a-z])(?=.*\\d).{8,}$";
+        return password.matches(regexPattern);
     }
 
 }

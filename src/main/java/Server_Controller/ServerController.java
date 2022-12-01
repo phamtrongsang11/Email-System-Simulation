@@ -145,9 +145,6 @@ public class ServerController {
 
     }
 
-//    public void setDomainName(String name) {
-//        this.domainName = name;
-//    }
     public boolean writeFile(String path, String user) {
         boolean result = true;
 
@@ -181,6 +178,7 @@ public class ServerController {
         try ( FileWriter fw = new FileWriter("domain.txt")) {
             if (!domainName.isEmpty()) {
                 fw.write(domainName);
+                System.out.println("Change success");
             }
 
         } catch (IOException ex) {
@@ -193,12 +191,12 @@ public class ServerController {
         try ( BufferedReader br = new BufferedReader(new FileReader(path))) {
             String data;
             while ((data = br.readLine()) != null) {
-                System.out.println(data);
                 StringTokenizer st = new StringTokenizer(data, ";");
                 if (st.countTokens() == 2) {
                     String user = st.nextToken();
                     String time = st.nextToken();
-                    map.put(user, time);
+//                    map.put(user, time);
+                    map.put(time, user);
                 } else {
                     System.out.println("Some line in file not have correct format");
                     break;
@@ -218,9 +216,10 @@ public class ServerController {
                            Info SignIn: 
                            -------------------""");
         for (Map.Entry<String, String> mapElement : mapSignin.entrySet()) {
-            String user = mapElement.getKey();
-            if (user.equals(email)) {
-                System.out.println(++i + ". " + mapElement.getValue() + "\n");
+
+            String user = mapElement.getValue();
+            if (getNameFromEmail(user).equals(getNameFromEmail(email))) {
+                System.out.println(++i + ". " + mapElement.getKey() + "\n");
             }
         }
         i = 0;
@@ -229,11 +228,19 @@ public class ServerController {
                            Info Signout: 
                            -------------------""");
         for (Map.Entry<String, String> mapElement : mapSignout.entrySet()) {
-            String user = mapElement.getKey();
-            if (user.equals(email)) {
-                System.out.println(++i + ". " + mapElement.getValue() + "\n");
+            String user = mapElement.getValue();
+            if (getNameFromEmail(user).equals(getNameFromEmail(email))) {
+                System.out.println(++i + ". " + mapElement.getKey() + "\n");
             }
         }
+    }
+
+    public String getNameFromEmail(String email) {
+        StringTokenizer st = new StringTokenizer(email, "@");
+        if (st.hasMoreTokens()) {
+            return st.nextToken();
+        }
+        return null;
     }
 
     public void SendMessageToAllUser(Mail mail) {
@@ -412,7 +419,7 @@ public class ServerController {
                                 if (st.hasMoreTokens()) {
                                     String name = st.nextToken();
                                     updateDomainName(name);
-                                    this.domainName = name;
+                                    domainName = name;
                                     writeDomainName();
                                 }
                             }
@@ -641,9 +648,9 @@ public class ServerController {
             User user = (User) data;
             user.setPassword(sec.hashMD5(user.getPassword()));
             if (uDAL.register(user)) {
+                
                 StringTokenizer st = new StringTokenizer(user.getEmail(), "@");
                 String name = st.nextToken();
-//                new File("users" + "/" + user.getEmail()).mkdirs();
                 new File("users" + "/" + name).mkdirs();
 
                 sendData(new ObjectWrapper(ObjectWrapper.REPLY_SIGNUP_USER, "success"));
@@ -719,7 +726,7 @@ public class ServerController {
                         }
 
                         Double total = sizeInDb + mail.getSize();
-                        System.out.println("Size of file: " + total);
+//                        System.out.println("Size of file: " + total);
 
                         uDAL.updateHadUsed(rec.getReceiver(), total);
                     }
@@ -809,7 +816,7 @@ public class ServerController {
         }
 
         public void getScheduleList(Object data, int status) throws IOException {
-            System.out.println(data);
+           
             if (data instanceof ObjectWrapper) {
 
             }
@@ -846,7 +853,7 @@ public class ServerController {
 
         public void enableScheduleSendMail() {
             ArrayList<Mail> mailList = mDAL.getSendMail(user, ObjectWrapper.SCHEDULE_LIST);
-            System.out.println(mailList);
+          
             if (!mailList.isEmpty()) {
                 for (Mail m : mailList) {
                     scheduleSendMail(m);
@@ -1161,7 +1168,7 @@ public class ServerController {
 
                 }
                 serverCtr.broardCastInbox(clientReceived);
-                System.out.println("schedule" + user);
+              
                 client.sendData(new ObjectWrapper(ObjectWrapper.SCHEDULE_COMPLETE, user));
 
             } else {

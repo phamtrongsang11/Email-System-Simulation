@@ -505,7 +505,7 @@ public class SendMailForm extends javax.swing.JFrame {
             Mail mail;
             if (replies.isEmpty()) {
                 ArrayList<MailReceived> recList = new ArrayList<>();
-                System.out.println("toList: " + toList);
+              
                 for (User u : toList) {
                     MailReceived rec = new MailReceived(u);
                     recList.add(rec);
@@ -620,7 +620,7 @@ public class SendMailForm extends javax.swing.JFrame {
                 txtMultiple.setText("");
                 return;
             }
-            System.out.println("nameto: " + nameToList);
+           
             mySocket.sendData(new ObjectWrapper(ObjectWrapper.CHECK_RECEPIENTS, nameToList));
         }
     }//GEN-LAST:event_txtMultipleFocusLost
@@ -640,6 +640,8 @@ public class SendMailForm extends javax.swing.JFrame {
         txtTo.setText("");
         choseBcc.setEnabled(true);
         choseCc.setEnabled(true);
+         replies.clear();
+        txtReply.setText("");
     }//GEN-LAST:event_radioMultiActionPerformed
 
     private void btnResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnResetActionPerformed
@@ -785,7 +787,7 @@ public class SendMailForm extends javax.swing.JFrame {
                     }
 
                 }
-                System.out.println("abc" + toList);
+               
             } else {
                 JOptionPane.showMessageDialog(this, "Your list had invalid user!!!");
                 txtMultiple.setText("");

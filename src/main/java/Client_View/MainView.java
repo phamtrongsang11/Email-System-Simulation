@@ -339,7 +339,7 @@ public class MainView extends javax.swing.JFrame {
 
         lbDelete.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
         lbDelete.setForeground(new java.awt.Color(255, 255, 255));
-        lbDelete.setText("DELETED");
+        lbDelete.setText("BIN");
         pDelete.add(lbDelete);
 
         lbnDelete.setFont(new java.awt.Font("Segoe UI", 3, 14)); // NOI18N
@@ -845,7 +845,7 @@ public class MainView extends javax.swing.JFrame {
             lbFrom.setText(tableMail.getModel().getValueAt(i, 1).toString());
             lbTime.setText(tableMail.getModel().getValueAt(i, 3).toString());
             lbSubject.setText(tableMail.getModel().getValueAt(i, 2).toString());
-            System.out.println(mailList.get(i));
+           
             lbFile.setText(mailList.get(i).getFile());
 
 //            System.out.println(mailList.get(i).getFile());
@@ -1091,7 +1091,7 @@ public class MainView extends javax.swing.JFrame {
     public void listMail(ObjectWrapper data) {
         if (!data.getData().equals("empty") && data.getData() instanceof ArrayList<?>) {
             mailList.clear();
-            System.out.println("here");
+           
             mailList = (ArrayList<Mail>) data.getData();
             if (!mailList.isEmpty()) {
                 if (mailList.get(0).getFormUser() == null) {

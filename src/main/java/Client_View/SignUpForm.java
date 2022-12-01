@@ -192,6 +192,11 @@ public class SignUpForm extends javax.swing.JFrame {
 
         txtPassword.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         txtPassword.setPreferredSize(new java.awt.Dimension(300, 30));
+        txtPassword.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                txtPasswordFocusLost(evt);
+            }
+        });
         jPanel11.add(txtPassword);
 
         jPanel10.add(jPanel11);
@@ -268,10 +273,15 @@ public class SignUpForm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnRegisterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRegisterActionPerformed
-//        String password = new String(txtPassword.getPassword());
-//        String confirm = new String(txtConfirm.getPassword());
 
         if (!checkEmpty()) {
+            String password = new String(txtPassword.getPassword());
+            String confirm = new String(txtConfirm.getPassword());
+            if (!password.equals(confirm)) {
+                JOptionPane.showMessageDialog(this, "Confirm password not match!");
+                txtConfirm.setText("");
+                return;
+            }
             User user = new User();
             user.setEmail(txtEmail.getText() + txtDomain.getText());
             user.setPassword(new String(txtPassword.getPassword()));
@@ -316,13 +326,15 @@ public class SignUpForm extends javax.swing.JFrame {
     }//GEN-LAST:event_txtLnameFocusLost
 
     private void txtConfirmFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtConfirmFocusLost
-        String password = new String(txtPassword.getPassword());
-        String confirm = new String(txtConfirm.getPassword());
-        if(!password.equals(confirm)){
-            JOptionPane.showMessageDialog(this, "Confirm password not match!");
-            txtConfirm.setText("");
-        }
+
     }//GEN-LAST:event_txtConfirmFocusLost
+
+    private void txtPasswordFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtPasswordFocusLost
+        if (txtPassword.getPassword().length != 0 && !Validation.validationPassword(new String(txtPassword.getPassword()))) {
+            JOptionPane.showMessageDialog(this, "Password must have eight characters, at least one letter and one number:");
+            txtPassword.setText("");
+        }
+    }//GEN-LAST:event_txtPasswordFocusLost
 
     public boolean checkEmpty() {
         if (txtFname.getText().isEmpty() || txtLname.getText().isEmpty() || txtEmail.getText().isEmpty() || new String(txtPassword.getPassword()).isEmpty() || new String(txtConfirm.getPassword()).isEmpty()) {

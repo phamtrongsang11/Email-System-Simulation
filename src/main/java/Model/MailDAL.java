@@ -215,7 +215,9 @@ public class MailDAL extends MyDatabaseManager {
 
     public int getTotalMailByStatus(User user, int statusID) {
         int total = 0;
+
         try {
+
             String query = "SELECT COUNT(mail.MailID) AS Total"
                     + " FROM mail"
                     + " INNER JOIN mail_received"
@@ -248,15 +250,24 @@ public class MailDAL extends MyDatabaseManager {
             String query;
             if (status == 0) {
                 query = "SELECT COUNT(MailID) AS Total FROM mail WHERE FromID = " + user.getId();
+                ResultSet rs = this.doReadQuery(query);
+
+                if (rs != null && rs.next()) {
+                    total = rs.getInt("Total");
+                }
             } else {
-                query = "SELECT COUNT(mail.MailID) AS Total FROM mail, mail_received WHERE mail.MailID = mail_received.MailID AND FromID = " + user.getId() + " AND StatusID = " + status;
+                query = "SELECT COUNT(*) FROM (SELECT mail.MailID FROM mail, mail_received WHERE mail.MailID = mail_received.MailID AND FromID = " + user.getId() + " AND StatusID = " + status + " GROUP BY mail.MailID) AS Total";
+//            query = "SELECT COUNT(mail.MailID) AS Total FROM mail, mail_received WHERE mail.MailID = mail_received.MailID AND FromID = " + user.getId() + " AND StatusID = " + status;
+                ResultSet rs = this.doReadQuery(query);
+
+                System.out.println(query);
+
+                if (rs != null && rs.next()) {
+                    total = rs.getInt("COUNT(*)");
+                    System.out.println(total);
+                }
             }
 
-            ResultSet rs = this.doReadQuery(query);
-
-            if (rs != null && rs.next()) {
-                total = rs.getInt("Total");
-            }
         } catch (Exception ex) {
             ex.getMessage();
         }
@@ -267,24 +278,22 @@ public class MailDAL extends MyDatabaseManager {
         boolean result = false;
         try {
             String query = "UPDATE mail_received SET StatusID = ? WHERE ReceiverID = ? AND MailID = ?";
-            
+
             for (MailReceived rec : mail.getToUser()) {
+
                 PreparedStatement p = this.getConnection().prepareStatement(query);
                 p.setInt(1, status);
-//            p.setInt(2, mail.getToUser().get(0).getReceiver().getId());
-                
+
                 p.setInt(2, rec.getReceiver().getId());
                 p.setInt(3, mail.getId());
-                
+
                 if (p.executeUpdate() != 0) {
-                result = true;
-            }
+                    result = true;
+                }
 
 //            System.out.println(mail);
-            System.out.println(p);
+                System.out.println(p);
             }
-
-            
 
         } catch (Exception e) {
             e.getMessage();
@@ -360,21 +369,20 @@ public class MailDAL extends MyDatabaseManager {
                         + " WHERE mail.FromID = " + user.getId()
                         + " ORDER BY mail.Time DESC";
             } else {
+
 //                query = "SELECT *"
 //                        + " FROM mail"
 //                        + " WHERE mail.FromID = " + user.getId()
 //                        + " AND StatusID = " + status
 //                        + " ORDER BY mail.Time DESC";
-
                 query = "SELECT *"
                         + " FROM mail, mail_received"
                         + " WHERE mail.MailID = mail_received.MailID AND mail.FromID = " + user.getId()
                         + " AND  mail_received.StatusID = " + status
-                        + " ORDER BY mail.Time DESC";
+                        + " GROUP BY mail.mailID ORDER BY mail.Time DESC";
 
             }
             ResultSet rs = this.doReadQuery(query);
-//            System.out.println(query);
 
             if (rs != null) {
 
