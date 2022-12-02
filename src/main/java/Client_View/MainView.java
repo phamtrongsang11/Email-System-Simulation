@@ -670,7 +670,7 @@ public class MainView extends javax.swing.JFrame {
 
         textContent.setEditable(false);
         textContent.setBackground(new java.awt.Color(255, 255, 255));
-        textContent.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        textContent.setContentType("text/html"); // NOI18N
         jScrollPane2.setViewportView(textContent);
 
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
@@ -846,7 +846,7 @@ public class MainView extends javax.swing.JFrame {
             lbFrom.setText(tableMail.getModel().getValueAt(i, 1).toString());
             lbTime.setText(tableMail.getModel().getValueAt(i, 3).toString());
             lbSubject.setText(tableMail.getModel().getValueAt(i, 2).toString());
-           
+
             lbFile.setText(mailList.get(i).getFile());
             textContent.setText(mailList.get(i).getContent());
 
@@ -1088,7 +1088,7 @@ public class MainView extends javax.swing.JFrame {
     public void listMail(ObjectWrapper data) {
         if (!data.getData().equals("empty") && data.getData() instanceof ArrayList<?>) {
             mailList.clear();
-           
+
             mailList = (ArrayList<Mail>) data.getData();
             if (!mailList.isEmpty()) {
                 if (mailList.get(0).getFormUser() == null) {
@@ -1133,12 +1133,14 @@ public class MainView extends javax.swing.JFrame {
             row.add(mailList.get(i).getId());
 
             String toUser = "";
-            for (MailReceived rec : mailList.get(i).getToUser()) {
-                toUser += rec.getReceiver().getEmail() + ", ";
-            }
+            if (!mailList.get(i).getToUser().isEmpty()) {
+                for (MailReceived rec : mailList.get(i).getToUser()) {
+                    toUser += rec.getReceiver().getEmail() + ", ";
+                }
 
-            if (toUser.length() > 0) {
-                toUser = toUser.substring(0, toUser.length() - 2);
+                if (toUser.length() > 0) {
+                    toUser = toUser.substring(0, toUser.length() - 2);
+                }
             }
 
             row.add(toUser);
@@ -1146,12 +1148,14 @@ public class MainView extends javax.swing.JFrame {
             row.add(mailList.get(i).getTime());
 
             String replies = "";
-            for (Mail mail : mailList.get(i).getRepList()) {
-                replies += mail.getTitle() + ", ";
-            }
+            if (!mailList.get(i).getRepList().isEmpty()) {
+                for (Mail mail : mailList.get(i).getRepList()) {
+                    replies += mail.getTitle() + ", ";
+                }
 
-            if (replies.length() > 0) {
-                replies = replies.substring(0, replies.length() - 2);
+                if (replies.length() > 0) {
+                    replies = replies.substring(0, replies.length() - 2);
+                }
             }
 
             row.add(replies);
@@ -1351,6 +1355,7 @@ public class MainView extends javax.swing.JFrame {
         lbTo.setText("");
         lbFrom.setText("");
         lbTime.setText("");
+        lbFile.setText("");
         lbSubject.setText("Subject Mail");
         textContent.setText("Content");
 
